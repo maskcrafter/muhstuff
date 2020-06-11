@@ -47,10 +47,10 @@ def order_food():
     get_params = request.args
 
     for food_name in get_params:
-        food_price = get_params[food_name]
+        food_quantity = get_params[food_name]
 
-        if food_price != '':
-            order_dict[food_name] = float(food_price)
+        if food_quantity != '':
+            order_dict[food_name] = int(food_quantity)
 
     return redirect(url_for('cart', order_number=order_number))
 
