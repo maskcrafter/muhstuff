@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %} {{ day_of_the_week }}'s Menu {% endblock %}
+
+{% block content %}
+    <p>Food menu for {{ day_of_the_week}}.</p>
+    <table border = "1">
+    <tr>
+        <td><b>Index</b></td>
+        <td><b>Food Name</b></td>
+        <td><b>Food Price</b></td>
+    </tr>
+
+    {% for food_name in food_data %}
+        <tr>
+            <td>{{ loop.index }}</td> 
+            <td>{{ food_name }}</td>
+            <td>${{ "%.2f"|format(food_data[food_name]) }}</td>
+        </tr>
+    {% endfor %}  
+    </table>
+
+    <br>
+    <a href="http://localhost:5000">Back to main menu</a>
+{% endblock %}

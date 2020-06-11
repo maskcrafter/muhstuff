@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Welcome to SPAM{% endblock %}
+{% block content %}
+    <h3>Welcome to SPAM</h3>
+
+    {% for day_of_the_week in weekdays %}
+        <p><a href='http://localhost:5000/view/{{day_of_the_week}}'>{{ day_of_the_week }}</a></p>
+    {% endfor %}
+{% endblock %}
