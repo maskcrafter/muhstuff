@@ -1,9 +1,16 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
+from calendar import day_name
+from datetime import date
+from random import randint
+
 import os
 import sys
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+CURRENT_DAY = day_name[date.today().weekday()]
+
 food_dict = dict()
+order_dict = dict()
 
 app = Flask(__name__)
 
@@ -18,13 +25,38 @@ def home():
 
 @app.route('/view/<day_of_the_week>')
 def view(day_of_the_week):
-    food_menu = food_dict.get(day_of_the_week) 
+    food_menu = food_dict.get(day_of_the_week)
 
     # food_menu will be None if key(day_of_the_week) is non-existent
-    if food_menu: # True 
-        return render_template('data.html', food_data = food_menu, day_of_the_week = day_of_the_week)
+    if food_menu:  # True
+        return render_template('data.html', food_data=food_menu, day_of_the_week=day_of_the_week)
     else:
-        return render_template('404.html', message = f'/view/{day_of_the_week} was not found.')
+        return render_template('404.html', message=f'/view/{day_of_the_week} was not found.')
+
+@app.route('/order/form')   # 1st -> order_food.html 
+def form():
+    food_menu_of_the_day_dict = food_dict[CURRENT_DAY]
+    return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY)
+
+@app.route('/order/cart')   # 2nd -> Form action submitted to /order/cart
+def order_food():
+    global order_dict
+    order_dict.clear()
+
+    order_number = randint(1, 500)
+    get_params = request.args
+
+    for food_name in get_params:
+        food_price = get_params[food_name]
+
+        if food_price != '':
+            order_dict[food_name] = float(food_price)
+
+    return redirect(url_for('cart', order_number=order_number))
+
+@app.route('/order/<order_number>') # 3rd -> Redirected to order number
+def cart(order_number):
+    return render_template('cart.html', order_number = order_number, order_dict = order_dict)
 
 def load_data_to_nested_dict():
     temp_food_dict = dict()

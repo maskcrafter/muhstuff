@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %} {{ current_day }}'s Menu {% endblock %}
+
+{% block content %}
+<p>Food menu for ({{ current_day }}).</p>
+
+<form action = '/order/cart'>
+    <table border = "1px solid black">
+        <tr>
+            <td><b>Index</b></td>
+            <td><b>Food Name</b></td>
+            <td><b>Food Price</b></td>
+            <td><b>Quantity</b></td>
+        </tr>
+
+        {% for food_name in food_data %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ food_name }}</td>
+            <td>${{ "%.2f"|format(food_data[food_name]) }}</td>
+            <td><input type = "number" name = '{{food_name}}' min = "1" max = "10"></td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <input type = "submit">
+    <br>
+</form>
+
+
+<br>
+<a href="http://localhost:5000">Back to main menu</a>
+{% endblock %}
