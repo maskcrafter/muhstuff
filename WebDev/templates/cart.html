@@ -2,14 +2,14 @@
 {% block title %}Food cart{% endblock %}
 
 {% block content %}
-<p>Order number -> {{order_number}}</p>
+<p>Order: #<u>{{ order_number }}</u></p>
 <p>Your cart:</p>
 
-<table border="1px solid black" width='600px' style="text-align : center">
+<table border = "1px solid black" width = '600px' style = "text-align : center">
     <tr>
         <th>Food name</th>
-        <th>Food price($)</th>
         <th>Food quantity</th>
+        <th>Food price</th>
     </tr>
 
     {% for food_name in food_cart_dict %}
@@ -19,10 +19,25 @@
 
         <tr>
             <td>{{ food_name }}</td>
-            <td>{{ "%.2f"|format(food_price) }}</td>
             <td>{{ food_quantity }}</td>
+            <td>${{ "%.2f"|format(food_price) }}</td>
         </tr>
     {% endfor %}
-
+    
+    {% set total_quantity = total_quantity_and_price_list[0] %}
+    {% set total_price = total_quantity_and_price_list[1] %}
+    
+    <tr>
+        <td><b>Total</b></td>
+        <td>{{ total_quantity }}</td>
+        <td><b>${{ "%.2f"|format(total_price) }}</b></td>
+    </tr>
 </table>
+
+<br>
+<form action = "/order/save" method = "get">
+    <input type = 'submit' name = "{{ order_number }}" value = "Save order #{{ order_number }}">
+</form>
+
+<p>Thank you for ordering from SPAM.<br>Please pay a total of $<u>{{ "%.2f"|format(total_price) }}</u></p>
 {% endblock %}

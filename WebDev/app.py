@@ -12,6 +12,7 @@ CURRENT_DAY = day_name[date.today().weekday()]
 food_dict = dict()
 food_cart_dict = dict()
 food_menu_of_the_day_dict = dict()
+total_quantity_and_price_list = list()
 
 app = Flask(__name__)
 
@@ -42,35 +43,86 @@ def form():
 @app.route('/order/cart')   # 2nd -> Form action submitted to /order/cart
 def order_food():
     global food_cart_dict
+    global total_quantity_and_price_list
+    
     food_cart_dict.clear()
+    total_quantity_and_price_list.clear()
 
     order_number = randint(1, 500)
     get_parameters = request.args
 
+    total_price = 0
+    total_quantity = 0
+
     for food_name in get_parameters:
         try:
             food_quantity = int(get_parameters.get(food_name))
+            food_price = food_menu_of_the_day_dict.get(food_name)
+            food_price *= food_quantity
 
-            if food_quantity > 0:
-                food_price = food_menu_of_the_day_dict.get(food_name)
-                price_and_quantity_list = [food_price, food_quantity]
-                food_cart_dict[food_name] = price_and_quantity_list
+            total_quantity += food_quantity
+            total_price += food_price
+                
+            price_and_quantity_list = [food_price, food_quantity]
+            food_cart_dict[food_name] = price_and_quantity_list
         
         # ValueError happens when quantity field is blank. Will do nothing and goes to the next loop.
         except ValueError:
             pass           
 
+    total_quantity_and_price_list = [total_quantity, total_price]
     return redirect(url_for('cart', order_number = order_number))
 
 @app.route('/order/<order_number>') # 3rd -> Redirected to order number
 def cart(order_number):
-    return render_template('cart.html', order_number = order_number, food_cart_dict = food_cart_dict)
+    return render_template('cart.html', order_number = order_number, food_cart_dict = food_cart_dict, total_quantity_and_price_list = total_quantity_and_price_list)
 
+@app.route('/order/save')
+def save_order():
+    get_parameters = request.args
+
+    # Order number will be the key, we are not interested in anything else.
+    for number in get_parameters:
+        order_number = number
+
+    print_receipt(order_number)
+    return render_template('order_saved.html', order_number = order_number)
+
+def print_receipt(order_number):
+    if len(food_cart_dict) > 0:
+        path_to_order = os.getcwd() + f"\\download\order_{order_number}.txt"
+
+        with open(path_to_order, 'w') as f:
+            data = "Thank you for ordering from SPAM.\n"
+            data += f"Order number: #{order_number}\n\n"
+            data += "=" * 64
+            data += "\nYour order\n"
+            data += "=" * 64
+
+            for count, food_name in enumerate(food_cart_dict, 1):
+                price_and_quantity_list = food_cart_dict.get(food_name)
+
+                food_price = price_and_quantity_list[0]
+                food_quantity = price_and_quantity_list[1]
+
+                food_name_and_quantity = f"{food_name} X {food_quantity}"
+                data += f"\n{count}. {food_name_and_quantity.ljust(50)} ${food_price:.2f}"
+
+            total_price = total_quantity_and_price_list[1]
+            total_price = f"${total_price:.2f}".rjust(55)
+
+            data += "\n"
+            data += "=" * 64
+            data += f"\nTotal{total_price}\n"
+            data += "=" * 64
+            data += "\n\nPlease present this receipt at the counter.\n"
+            data += f"Total amount payable -> {total_price.strip()}"
+
+            f.write(data)
+ 
 def load_data_to_nested_dict():
     temp_food_dict = dict()
-
-    current_path = os.getcwd()
-    path_to_data = current_path + "\\food.txt"
+    path_to_data = os.getcwd() + "\\food.txt"
     file_exist = os.path.exists(path_to_data)
 
     if file_exist:
