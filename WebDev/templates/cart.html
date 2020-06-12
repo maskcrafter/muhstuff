@@ -3,5 +3,26 @@
 
 {% block content %}
 <p>Order number -> {{order_number}}</p>
-<p>Cart -> {{order_dict}}</p>
+<p>Your cart:</p>
+
+<table border="1px solid black" width='600px' style="text-align : center">
+    <tr>
+        <th>Food name</th>
+        <th>Food price($)</th>
+        <th>Food quantity</th>
+    </tr>
+
+    {% for food_name in food_cart_dict %}
+        {% set price_and_quantity_list = food_cart_dict.get(food_name) %}
+        {% set food_price = price_and_quantity_list[0] %}
+        {% set food_quantity = price_and_quantity_list[1] %}
+
+        <tr>
+            <td>{{ food_name }}</td>
+            <td>{{ "%.2f"|format(food_price) }}</td>
+            <td>{{ food_quantity }}</td>
+        </tr>
+    {% endfor %}
+
+</table>
 {% endblock %}

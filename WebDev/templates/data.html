@@ -3,18 +3,18 @@
 
 {% block content %}
     <p>Food menu for ({{ day_of_the_week}}).</p>
-    <table border = "1">
+    <table border = "1px solid black" width = '500px' style = "text-align : center">
     <tr>
-        <td><b>Index</b></td>
-        <td><b>Food Name</b></td>
-        <td><b>Food Price</b></td>
+        <th>Index</td>
+        <th>Food Name</td>
+        <th>Food Price</td>
     </tr>
 
     {% for food_name in food_data %}
         <tr>
-            <td>{{ loop.index }}</td> 
-            <td>{{ food_name }}</td>
-            <td>${{ "%.2f"|format(food_data[food_name]) }}</td>
+            <td><p>{{ loop.index }}</p></td> 
+            <td><p>{{ food_name }}</p></td>
+            <td><p>${{ "%.2f"|format(food_data[food_name]) }}</p></td>
         </tr>
     {% endfor %}  
     </table>

@@ -3,7 +3,20 @@
 {% block content %}
     <h3>Welcome to SPAM</h3>
 
+    <p>Food for the week:</p>
+
+    <table border = "1px solid black" width = '300px' style = "text-align : center">
     {% for day_of_the_week in weekdays %}
-        <p><a href='http://localhost:5000/view/{{day_of_the_week}}'>{{ day_of_the_week }}</a></p>
+        <tr>
+            <td>
+                <p>
+                <a href = 'http://localhost:5000/view/{{day_of_the_week}}'>{{ day_of_the_week }}</a>
+                </p>
+            </td>
+        </tr>
     {% endfor %}
+    </table>
+
+    <br>
+    <a href = 'http://localhost:5000/order/form'>-> Click 'Here' to order food <-</a>
 {% endblock %}

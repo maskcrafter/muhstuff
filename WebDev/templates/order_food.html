@@ -5,12 +5,12 @@
 <p>Food menu for ({{ current_day }}).</p>
 
 <form action = '/order/cart'>
-    <table border = "1px solid black">
+    <table border = "1px solid black" width = '800px' style = "text-align : center">
         <tr>
-            <td><b>Index</b></td>
-            <td><b>Food Name</b></td>
-            <td><b>Food Price</b></td>
-            <td><b>Quantity</b></td>
+            <th>Index</th>
+            <th>Food Name</th>
+            <th>Food Price</th>
+            <th>Quantity</th>
         </tr>
 
         {% for food_name in food_data %}
@@ -27,7 +27,6 @@
     <input type = "submit">
     <br>
 </form>
-
 
 <br>
 <a href="http://localhost:5000">Back to main menu</a>
