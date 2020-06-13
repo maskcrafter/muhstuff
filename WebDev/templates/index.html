@@ -1,22 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Welcome to SPAM{% endblock %}
+{% block title %} Welcome to SPAM {% endblock %}
+
 {% block content %}
     <h3>Welcome to SPAM</h3>
 
-    <p>Food for the week:</p>
-
-    <table border = "1px solid black" width = '300px' style = "text-align : center">
-    {% for day_of_the_week in weekdays %}
+    <table border="1px solid black" width='300px' style="text-align : center">
+        <p>Food of the day:</p>
         <tr>
             <td>
-                <p>
-                <a href = 'http://localhost:5000/view/{{day_of_the_week}}'>{{ day_of_the_week }}</a>
-                </p>
+                <p><a href='/view/{{ current_day }}'>{{ current_day }}</a></p>
             </td>
         </tr>
-    {% endfor %}
     </table>
 
-    <br>
-    <a href = 'http://localhost:5000/order/form'>-> Click 'Here' to order food <-</a>
+    <p>Click <a href='/order/form'><b>HERE</b></a> to order food.</p><hr>
+
+    <table border = "1px solid black" width = '300px' style = "text-align : center">     
+        <p><b>View</b> food for the other days:</p>
+
+        {% for day_of_the_week in weekdays %}
+            {% if day_of_the_week != current_day %}
+                <tr>
+                    <td>
+                        <p><a href = '/view/{{ day_of_the_week }}'>{{ day_of_the_week }}</a></p>
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
 {% endblock %}

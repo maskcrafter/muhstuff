@@ -1,7 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}#{{ order_number }}{% endblock %}
+{% block title %} #{{ order_number }} {% endblock %}
 
 {% block content %}
-    <p>Saved order #{{ order_number }} to file.</p>
+    <p>To download order #<b>{{ order_number }}</b>, click on the <b>Download File</b> button.</p>
+    <p>Alternatively, click on <a href = '/'><b>HERE</b></a> for the Main Menu.</p><hr>
+    
+    <form method = "get" action = '/download'>
+        <input type = 'submit' name = "{{ order_number }}" value = "Download File">
+    </form>
 {% endblock %}

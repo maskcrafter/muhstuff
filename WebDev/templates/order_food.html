@@ -2,32 +2,32 @@
 {% block title %} {{ current_day }}'s Menu {% endblock %}
 
 {% block content %}
-<p>Food menu for ({{ current_day }}).</p>
+    <p>Food menu for ({{ current_day }}).</p>
 
-<form action = '/order/cart'>
-    <table border = "1px solid black" width = '800px' style = "text-align : center">
-        <tr>
-            <th>Index</th>
-            <th>Food Name</th>
-            <th>Food Price</th>
-            <th>Quantity</th>
-        </tr>
+    <form action = '/order/cart'>
+        <table border = "1px solid black" width = '800px' style = "text-align : center">
+            <tr>
+                <th><p>Index</p></th>
+                <th>Food Name</th>
+                <th>Food Price</th>
+                <th>Quantity</th>
+            </tr>
 
-        {% for food_name in food_data %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ food_name }}</td>
-            <td>${{ "%.2f"|format(food_data[food_name]) }}</td>
-            <td><input type = "number" name = '{{ food_name }}' min = "1" max = "10"></td>
-        </tr>
-        {% endfor %}
-    </table>
+            {% for food_name in food_data %}
+            <tr>
+                <td><p>{{ loop.index }}</p></td>
+                <td>{{ food_name }}</td>
+                <td>${{ "%.2f"|format(food_data[food_name]) }}</td>
+                <td><p><input type = "number" name = '{{ food_name }}' min = "1" max = "10"></p></td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+        <input type = "submit" value = "Order Food">
+        <br>
+    </form>
 
     <br>
-    <input type = "submit" value = "Order Food">
-    <br>
-</form>
-
-<br>
-<a href="http://localhost:5000">Back to main menu</a>
+    <a href="http://localhost:5000">Back to <b>Main Menu</b>.</a>
 {% endblock %}
