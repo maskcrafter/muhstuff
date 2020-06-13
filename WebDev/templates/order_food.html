@@ -5,20 +5,19 @@
     <p>Food menu for ({{ current_day }}).</p>
 
     <form action = '/order/cart'>
-        <table border = "1px solid black" width = '800px' style = "text-align : center">
+        <table border = "1px solid black" width = '600px' style = "text-align : center">
             <tr>
-                <th><p>Index</p></th>
-                <th>Food Name</th>
+                <th colspan = "2">Food Name</th>
                 <th>Food Price</th>
                 <th>Quantity</th>
             </tr>
 
             {% for food_name in food_data %}
             <tr>
-                <td><p>{{ loop.index }}</p></td>
+                <td><p><b>{{ loop.index }}</b></p></td>
                 <td>{{ food_name }}</td>
                 <td>${{ "%.2f"|format(food_data[food_name]) }}</td>
-                <td><p><input type = "number" name = '{{ food_name }}' min = "1" max = "10"></p></td>
+                <td><input type = "number" name = '{{ food_name }}' min = "0" max = "10" value = "0"></td>
             </tr>
             {% endfor %}
         </table>
@@ -29,5 +28,5 @@
     </form>
 
     <br>
-    <a href="http://localhost:5000">Back to Main Menu</a>
+    <a href = "/">Back to Main Menu</a>
 {% endblock %}

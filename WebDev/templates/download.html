@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %} Download folder {% endblock %}
+
+{% block content %}
+    <p><u>Directory Listing</u></p>
+
+    <form method = "get" action = '/download'>
+        <table border="1px solid black" width='350px' style="text-align : center">
+
+            {% for file in files %}
+                <tr>
+                    <td><p>{{ file }}.txt</p></td>
+                    <td><input type = 'submit' name = "{{ file }}" value = "Download {{ file }}.txt"><br></td>
+                </tr>
+            {% endfor %}
+
+        </table>
+    </form>
+
+    <p><b>{{ num_of_files }}</b> file(s) Found.</p>
+    <p>Click <a href='/'><b>HERE</b></a> for the Main Menu.</p>
+{% endblock %}

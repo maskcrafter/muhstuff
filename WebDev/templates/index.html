@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %} Welcome to SPAM {% endblock %}
+{% block title %} Welcome Page {% endblock %}
 
 {% block content %}
     <h3>Welcome to SPAM&trade;</h3>
@@ -9,11 +9,12 @@
         <tr>
             <td>
                 <p><a href='/view/{{ current_day }}'>{{ current_day }}</a></p>
+                <p><a href='/order/form'>Click Here</a> to order food.</p>
             </td>
         </tr>
     </table>
 
-    <p>Click <a href='/order/form'><b>HERE</b></a> to order food.</p><hr>
+    <p><a href='/download'>Click Here</a> to browse the download folder.</p><hr>
 
     <table border = "1px solid black" width = '300px' style = "text-align : center">     
         <p><b>View</b> food for the other days:</p>
@@ -27,5 +28,6 @@
                 </tr>
             {% endif %}
         {% endfor %}
+    
     </table>
 {% endblock %}

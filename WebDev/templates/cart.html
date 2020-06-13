@@ -31,11 +31,12 @@
             <td>x {{ total_quantity }}</td>
             <td>$<u>{{ "%.2f"|format(total_price) }}</u></td>
         </tr>
-    </table><hr>
+    </table>
+    <br><hr>
 
     <p>Thank you for ordering from SPAM.<br>Please pay a total of $<u>{{ "%.2f"|format(total_price) }}</u></p>
 
     <form action="/order/save" method="get">
-        <input type='submit' name="{{ order_number }}" value="Save Order #{{ order_number }}">
+        <input type = 'submit' name = "{{ order_number }}" value = "Save Order #{{ order_number }}">
     </form>
 {% endblock %}

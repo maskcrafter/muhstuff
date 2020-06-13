@@ -2,9 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 from calendar import day_name
 from datetime import date
 from random import randint
-from os import getcwd, path
+from os import getcwd, path, listdir
 
 import sys
+import re
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 CURRENT_DAY = day_name[date.today().weekday()]
@@ -39,7 +40,7 @@ def view(day_of_the_week):
 
     # food_menu will be None if key(day_of_the_week) is non-existent
     if food_menu_dict:  # True
-        return render_template('data.html', food_data = food_menu_dict, day_of_the_week = day_of_the_week)
+        return render_template('data.html', food_data = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY)
     else:
         return render_template('404.html')
 
@@ -72,14 +73,15 @@ def order_food():
         try:
             food_quantity = int(get_parameters.get(food_name))
 
-            food_price = food_menu_of_the_day_dict.get(food_name)
-            food_price *= food_quantity # Get the price of a particular food if a quantity is given.
+            if food_quantity > 0:
+                food_price = food_menu_of_the_day_dict.get(food_name)
+                food_price *= food_quantity # Get the price of a particular food if a quantity is given.
 
-            total_quantity += food_quantity
-            total_price += food_price
-                
-            price_and_quantity_list = [food_price, food_quantity]
-            food_cart_dict[food_name] = price_and_quantity_list
+                total_quantity += food_quantity
+                total_price += food_price
+                    
+                price_and_quantity_list = [food_price, food_quantity]
+                food_cart_dict[food_name] = price_and_quantity_list
         
         # ValueError happens when quantity field is blank. Will do nothing and goes to the next loop.
         except ValueError:
@@ -90,6 +92,7 @@ def order_food():
     if len(food_cart_dict) > 0:
         order_raised = True
         return redirect(url_for('cart', order_number = order_number))
+
     else:
         refresh_data()
         return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY)
@@ -109,14 +112,27 @@ def cart(order_number):
 def download_file():
     get_parameters = request.args
 
+    if len(get_parameters) > 0:
     # Only interested in order number and nothing else.
-    for number in get_parameters:
-        order_number = number 
+        for number in get_parameters:
+            order_number = number 
 
-    receipt = f"{order_number}.txt"
-    path_to_download_folder = getcwd() + "\\download\\" 
+        receipt = f"{order_number}.txt"
+        path_to_download_folder = getcwd() + "\\download\\" 
+        
+        return send_from_directory(path_to_download_folder, receipt, as_attachment = True)
     
-    return send_from_directory(path_to_download_folder, receipt, as_attachment = True)
+    else:
+        non_filtered_files = listdir(getcwd() + "\\download")
+        num_of_files = len(non_filtered_files)
+
+        regex = r"\.txt"
+
+        filtered_files = list()
+        for file in non_filtered_files:
+            filtered_files.append(re.sub(regex, '', file))
+
+        return render_template('download.html', files = filtered_files, num_of_files = num_of_files)
 
 @app.route('/order/save')
 def save_order():
@@ -132,35 +148,36 @@ def save_order():
     return render_template('order_saved.html', order_number = order_number, path_to_receipt = path_to_receipt)
 
 def print_receipt(order_number):
-    path_to_receipt = getcwd() + f"\\download\{order_number}.txt"
+    if len(food_cart_dict) > 0 and len(total_quantity_and_price_list) > 0:
+        path_to_receipt = getcwd() + f"\\download\{order_number}.txt"
 
-    with open(path_to_receipt, 'w') as f:
-        data = "Thank you for ordering from SPAM.\n"
-        data += f"Order number: #{order_number}\n\n"
-        data += "=" * 64
-        data += "\nYour order\n"
-        data += "=" * 64
+        with open(path_to_receipt, 'w') as f:
+            data = "Thank you for ordering from SPAM.\n"
+            data += f"Order number: #{order_number}\n\n"
+            data += "=" * 64
+            data += "\nYour order\n"
+            data += "=" * 64
 
-        for count, food_name in enumerate(food_cart_dict, 1):
-            price_and_quantity_list = food_cart_dict.get(food_name)
+            for count, food_name in enumerate(food_cart_dict, 1):
+                price_and_quantity_list = food_cart_dict.get(food_name)
 
-            food_price = price_and_quantity_list[0]
-            food_quantity = price_and_quantity_list[1]
+                food_price = price_and_quantity_list[0]
+                food_quantity = price_and_quantity_list[1]
 
-            food_name_and_quantity = f"{food_name} X {food_quantity}"
-            data += f"\n{count}. {food_name_and_quantity.ljust(50)} ${food_price:.2f}"
+                food_name_and_quantity = f"{food_name} X {food_quantity}"
+                data += f"\n{count}. {food_name_and_quantity.ljust(50)} ${food_price:.2f}"
 
-        total_price = total_quantity_and_price_list[1]
-        total_price = f"${total_price:.2f}".rjust(55)
+            total_price = total_quantity_and_price_list[1]
+            total_price = f"${total_price:.2f}".rjust(55)
 
-        data += "\n"
-        data += "=" * 64
-        data += f"\nTotal{total_price}\n"
-        data += "=" * 64
-        data += "\n\nPlease present this receipt at the counter.\n"
-        data += f"Total amount payable -> {total_price.strip()}"
+            data += "\n"
+            data += "=" * 64
+            data += f"\nTotal{total_price}\n"
+            data += "=" * 64
+            data += "\n\nPlease present this receipt at the counter.\n"
+            data += f"Total amount payable -> {total_price.strip()}"
 
-        f.write(data)      
+            f.write(data)      
 
 def load_data_to_nested_dict():
     temp_food_dict = dict()

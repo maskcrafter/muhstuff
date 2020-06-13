@@ -5,20 +5,25 @@
     <p>Food menu for ({{ day_of_the_week}}).</p>
     <table border = "1px solid black" width = '500px' style = "text-align : center">
     <tr>
-        <th>Index</td>
-        <th>Food Name</td>
-        <th>Food Price</td>
+        <th colspan = "2">Food Name</th>
+        <th>Food Price</th>
     </tr>
 
     {% for food_name in food_data %}
         <tr>
-            <td><p>{{ loop.index }}</p></td> 
+            <td><p><b>{{ loop.index }}</b></p></td> 
             <td><p>{{ food_name }}</p></td>
             <td><p>${{ "%.2f"|format(food_data[food_name]) }}</p></td>
         </tr>
     {% endfor %}  
     </table>
 
-    <br>
-    <a href="http://localhost:5000">Back to Main Menu</a>
+    {% if day_of_the_week == current_day %}
+        <p>Click <a href='/order/form'><b>HERE</b></a> to order food.</p>
+
+    {% else %}
+        <br>
+    {% endif %}
+
+    <a href = "/">Back to Main Menu</a>
 {% endblock %}
