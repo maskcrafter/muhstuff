@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, Markup
 from calendar import day_name
 from datetime import date
 from random import randint
@@ -78,7 +78,7 @@ def save_changes():
 
     temp_food_dict = food_dict.get(day_of_the_week)
 
-    validated = False
+    updated = False
     message = ""
 
     # New food name and new food price is not empty.
@@ -88,28 +88,28 @@ def save_changes():
         
         # Regex passed.
         if re.match(regex, new_food_name):
-            # Change only Key Value.
+
+            # Change only Key values.
             if new_food_name == old_food_name:
                 try:
                     old_food_price = float(old_food_price)
                     new_food_price = float(new_food_price)
 
-                    if new_food_price > 0 and new_food_price != old_food_price:
+                    if new_food_price == old_food_price:
+                        message += "New food name and prices are the same.<br>"
+                        message += "As such, no changes will be made."
+                        message = Markup(message)
+
+                    elif new_food_price > 0:
                         # Key name remains the same, only values changed.
                         temp_food_dict[old_food_name] = new_food_price
                         food_dict[day_of_the_week] = temp_food_dict
+                        
                         update_file(path_to_data, food_dict)
-
-                        validated = True
-
-                    elif new_food_price == old_food_price:
-                        message += "New food name is equal to old food name.\n"
-                        message += "New food price is equal to old food price.\n"
-                        message += "As such, no changes will be made."
+                        updated = True
 
                     else:
-                        message += "New food price must not be lesser than 0.\n"
-                        message += "New food price must not be equal to the old food price."
+                        message += "New food price must not be lesser than 0."
 
                 except ValueError:
                     message += "New food price must be in floating point format."
@@ -119,15 +119,16 @@ def save_changes():
                 try:
                     new_food_price = float(new_food_price)
 
-                    # Delete key name.
-                    del temp_food_dict[old_food_name]
+                    if new_food_price > 0:
+                        temp_food_dict[new_food_name] = temp_food_dict.pop(old_food_name)
+                        temp_food_dict[new_food_name] = new_food_price
+                        food_dict[day_of_the_week] = temp_food_dict
 
-                    # Assign new key name and value.
-                    temp_food_dict[new_food_name] = new_food_price
-                    food_dict[day_of_the_week] = temp_food_dict
-                    update_file(path_to_data, food_dict)
+                        update_file(path_to_data, food_dict)
+                        updated = True
 
-                    validated = True
+                    else:
+                        message += "New food price must not be lesser than 0."
                 
                 except ValueError:
                     message += "New food price must be in floating point format."
@@ -142,7 +143,7 @@ def save_changes():
 
     food_menu_dict = food_dict.get(day_of_the_week)
 
-    if validated:
+    if updated:
         refresh_data()
         message = "Successfully updated data!"
 

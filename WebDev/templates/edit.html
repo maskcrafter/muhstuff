@@ -86,8 +86,7 @@
         </table>
     </form>
 
-    {% if message | length %}
-        <script>alert("{{ message }}");</script>
+    {% if message | length%}
+        <p>{{ message }}</p>
     {% endif %}
-
 {% endblock %}
