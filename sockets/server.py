@@ -1,7 +1,10 @@
 import socket
 import sqlite3
+import sys
+
 from os import system, getcwd, path
 from time import sleep
+
 
 class Server:
     def __init__(self, ip_address, port):
@@ -47,6 +50,9 @@ class Login_Server(Server):
                 if (sqlite_connection):
                     sqlite_connection.close()
                     print("Sqlite connection closed")
+        else:
+            print("Unable to find DB file.")
+            sys.exit(1)
 
 class Simple_Food_Server(Login_Server):
     def __init__(self, ip_address, port, db_filename, filename):

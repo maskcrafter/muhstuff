@@ -421,23 +421,34 @@ def change_food_name(selected_day, selected_day_food_dict, selected_food_name):
     regex = r"^[A-Za-z ]*$"
 
     if re.match(regex, new_food_name):
-        if new_food_name.lower() != selected_food_name.lower():
+        for food_name in selected_day_food_dict:
+            duplicate_food_name_found = False
 
-            selected_day_food_dict[new_food_name] = selected_day_food_dict.pop(selected_food_name)
-            food_dict[selected_day] = selected_day_food_dict
+            if new_food_name.lower() == food_name.lower():
+                duplicate_food_name_found = True
 
-            food_cart_dict.clear()
+                print(f"\n\tThere is already an existing \"{new_food_name}\" in the menu.")
+                pause()
+                break
 
-            update_data()
+        if not duplicate_food_name_found:
+            if new_food_name.lower() != selected_food_name.lower():
 
-            print(f"\n\tChanged {selected_food_name} to {new_food_name}.")
-            short_pause()
+                selected_day_food_dict[new_food_name] = selected_day_food_dict.pop(selected_food_name)
+                food_dict[selected_day] = selected_day_food_dict
 
-            return "updated"
-        
-        else:
-            print(f"\n\tNew food name -> {new_food_name} is the same as the old name -> {selected_food_name}.")
-            pause()
+                food_cart_dict.clear()
+
+                update_data()
+
+                print(f"\n\tChanged {selected_food_name} to {new_food_name}.")
+                short_pause()
+
+                return "updated"
+            
+            else:
+                print(f"\n\tNew food name -> {new_food_name} is the same as the old name -> {selected_food_name}.")
+                pause()
 
     else:
         print("\n\tOnly alphabets and spaces are accepted.")
@@ -710,8 +721,8 @@ try:
 
     RECEIPT_FILE_PATH = getcwd() + "\\order.txt"
     
-    HOST = "backend01.itflee.com"
-    #HOST = "127.0.0.1"
+    #HOST = "backend01.itflee.com"
+    HOST = "127.0.0.1"
     PORT = 4444
 
     food_dict = convert_data_to_nested_dict(download_data())
