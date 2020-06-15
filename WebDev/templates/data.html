@@ -9,11 +9,11 @@
         <th>Food Price</th>
     </tr>
 
-    {% for food_name in food_data %}
+    {% for food_name in food_menu_dict %}
         <tr>
             <td><p><b>{{ loop.index }}</b></p></td> 
             <td><p>{{ food_name }}</p></td>
-            <td><p>${{ "%.2f"|format(food_data[food_name]) }}</p></td>
+            <td><p>${{ "%.2f" | format(food_menu_dict.get(food_name)) }}</p></td>
         </tr>
     {% endfor %}  
     </table>

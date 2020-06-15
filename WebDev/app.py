@@ -10,6 +10,8 @@ import re
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 CURRENT_DAY = day_name[date.today().weekday()]
 
+path_to_data = getcwd() + "\\food.txt"
+
 food_dict = dict()
 food_cart_dict = dict()
 food_menu_of_the_day_dict = dict()
@@ -40,9 +42,114 @@ def view(day_of_the_week):
 
     # food_menu will be None if key(day_of_the_week) is non-existent
     if food_menu_dict:  # True
-        return render_template('data.html', food_data = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY)
+        return render_template('data.html', food_menu_dict = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY)
     else:
         return render_template('404.html')
+
+@app.route('/admin/<day_of_the_week>')
+def edit(day_of_the_week):
+    food_menu_dict = food_dict.get(day_of_the_week)
+
+    if food_menu_dict:
+        return render_template('edit.html', food_menu_dict = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY)
+    else:
+        return render_template('404.html')
+
+@app.route('/admin/save')
+def save_changes():
+    global food_dict
+    global food_cart_dict
+    global total_quantity_and_price_list
+
+    temp_food_dict = dict()
+
+    food_cart_dict.clear()
+    total_quantity_and_price_list.clear()
+
+    get_parameters = request.args
+
+    day_of_the_week = get_parameters.get("day_of_the_week")
+    
+    old_food_name = get_parameters.get("old_food_name")
+    old_food_price = get_parameters.get("old_food_price")
+
+    new_food_name = get_parameters.get("new_food_name").strip()
+    new_food_price = get_parameters.get("new_food_price").strip()
+
+    temp_food_dict = food_dict.get(day_of_the_week)
+
+    validated = False
+    message = ""
+
+    # New food name and new food price is not empty.
+    if new_food_name != "" and new_food_price != "":
+        # Only accepts alphabets and spaces.
+        regex = r"^[A-Za-z ]*$"
+        
+        # Regex passed.
+        if re.match(regex, new_food_name):
+            # Change only Key Value.
+            if new_food_name == old_food_name:
+                try:
+                    old_food_price = float(old_food_price)
+                    new_food_price = float(new_food_price)
+
+                    if new_food_price > 0 and new_food_price != old_food_price:
+                        # Key name remains the same, only values changed.
+                        temp_food_dict[old_food_name] = new_food_price
+                        food_dict[day_of_the_week] = temp_food_dict
+                        update_file(path_to_data, food_dict)
+
+                        validated = True
+
+                    elif new_food_price == old_food_price:
+                        message += "New food name is equal to old food name.\n"
+                        message += "New food price is equal to old food price.\n"
+                        message += "As such, no changes will be made."
+
+                    else:
+                        message += "New food price must not be lesser than 0.\n"
+                        message += "New food price must not be equal to the old food price."
+
+                except ValueError:
+                    message += "New food price must be in floating point format."
+
+            # If new food name is different from old food name.
+            else:
+                try:
+                    new_food_price = float(new_food_price)
+
+                    # Delete key name.
+                    del temp_food_dict[old_food_name]
+
+                    # Assign new key name and value.
+                    temp_food_dict[new_food_name] = new_food_price
+                    food_dict[day_of_the_week] = temp_food_dict
+                    update_file(path_to_data, food_dict)
+
+                    validated = True
+                
+                except ValueError:
+                    message += "New food price must be in floating point format."
+        
+        # Failed regex. 
+        else:
+            message += "Only alphabets and spaces are accepted for New food"
+
+    # New food name and/or new food price is empty.
+    else:
+        message += "New food name and/or food price must not be empty."
+
+    food_menu_dict = food_dict.get(day_of_the_week)
+
+    if validated:
+        refresh_data()
+        message = "Successfully updated data!"
+
+        return render_template('edit.html', food_menu_dict = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY, message = message)
+    
+    else:
+        return render_template('edit.html', food_menu_dict = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY, message = message)
 
 # 1st -> order_food.html
 @app.route('/order/form')    
@@ -92,7 +199,6 @@ def order_food():
     if len(food_cart_dict) > 0:
         order_raised = True
         return redirect(url_for('cart', order_number = order_number))
-
     else:
         refresh_data()
         return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY)
@@ -148,6 +254,7 @@ def save_order():
     return render_template('order_saved.html', order_number = order_number, path_to_receipt = path_to_receipt)
 
 def print_receipt(order_number):
+    # This if condition means that if there is an order, save the order to a file.
     if len(food_cart_dict) > 0 and len(total_quantity_and_price_list) > 0:
         path_to_receipt = getcwd() + f"\\download\{order_number}.txt"
 
@@ -181,7 +288,6 @@ def print_receipt(order_number):
 
 def load_data_to_nested_dict():
     temp_food_dict = dict()
-    path_to_data = getcwd() + "\\food.txt"
     file_exist = path.exists(path_to_data)
 
     if file_exist:
@@ -204,7 +310,6 @@ def load_data_to_nested_dict():
             temp_food_dict[day_of_the_week] = food_name_and_price_dict
 
         return temp_food_dict
-
     else:
         # Exit program if we are not able to read from our data file.
         print(f"Could not open -> {path_to_data}")
@@ -219,6 +324,22 @@ def refresh_data():
 
     food_dict = load_data_to_nested_dict()
     food_menu_of_the_day_dict = food_dict.get(CURRENT_DAY)
+
+def update_file(filename, food_dict):
+    with open(filename, 'w+') as f:
+        data = ""
+
+        # Outer loop -> Monday to Sunday.
+        for day_of_the_week in food_dict:
+            day_of_the_week_food_dict = food_dict.get(day_of_the_week)
+
+            # Inner loop -> Food for a particular day.
+            for food_name in day_of_the_week_food_dict:
+                food_price = day_of_the_week_food_dict.get(food_name)
+                data += f'{day_of_the_week},{food_name},{food_price}\n'
+
+        # Removes extra newlines from previous execution.
+        f.write(data.strip())
 
 if __name__ == '__main__':
     refresh_data()
