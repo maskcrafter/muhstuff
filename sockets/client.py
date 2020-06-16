@@ -101,11 +101,12 @@ def order_food(local_food_dict):
         print_header(f"\tOrder food")
         list_food(local_food_dict)
 
-        instructions = "\n\tEnter \"0\" to exit.\n\tOnly digits are accepted.\n\n\tOption -> "
-        option = input(instructions).strip()
-
         try:
-            option = int(option)
+            instructions = "\n\tEnter \"0\" to exit."
+            instructions += "\n\tOnly digits are accepted."
+            instructions += "\n\n\tOption -> "
+
+            option = int(input(instructions).strip())
 
             if option == 0:
                 break
@@ -124,7 +125,10 @@ def order_food(local_food_dict):
                 clear_screen()
                 print_header(f"\t{ordered_food_name}'s page.")
 
-                instructions = "\tOnly digits are accepted.\n\tMin digits - 1, Max digits - 2.\n\n\tQuantity -> "
+                instructions = "\tOnly digits are accepted."
+                instructions += "\n\tMin digits - 1, Max digits - 2."
+                instructions += "\n\n\tQuantity -> "
+                
                 order_quantity = input(instructions).strip()
 
                 # https://stackoverflow.com/questions/4824942/regex-to-match-digits-of-specific-length
@@ -162,7 +166,10 @@ def search_food():
         clear_screen()
         print_header(f"\tFood-Search Menu")
 
-        instructions = "\tOnly alphabets and spaces are accepted.\n\tEnter \"exit\" to go back to the previous menu.\n\n\tSearch -> "
+        instructions = "\tOnly alphabets and spaces are accepted."
+        instructions += "\n\tEnter \"exit\" to go back to the previous menu."
+        instructions += "\n\n\tSearch -> "
+        
         food_to_search = input(instructions).lower().strip()
 
         # https://stackoverflow.com/questions/30994738/how-to-make-input-only-accept-a-z-etc
@@ -218,7 +225,8 @@ def list_order():
             print_header(f"\tTotal{total_price}")
 
             instructions = "\n\tOnly 'q', 's', 'e' are accepted."
-            instructions += "\n\n\tEnter \"q\" to go back to the main menu.\n\tEnter \"s\" to print out receipt."
+            instructions += "\n\n\tEnter \"q\" to go back to the main menu."
+            instructions += "\n\tEnter \"s\" to print out receipt."
             instructions += "\n\tEmpty \"e\" to empty cart.\n\n\tOption -> "
             
             option = input(instructions).lower().strip()
@@ -266,7 +274,7 @@ def print_receipt(filename):
             data += "=" * 64
 
             total_price = 0
-            
+
             for count, food_name in enumerate(food_cart_dict, 1):
                 price_and_quantity_list = food_cart_dict[food_name]
 
@@ -303,11 +311,12 @@ def user_menu(username):
         print("\t2. Search food.")
         print("\t3. Display cart.")
         
-        instructions = "\n\tOnly digits are accepted.\n\tEnter \"0\" to exit.\n\n\tChoice -> "
-        option = input(instructions).strip()
+        instructions = "\n\tOnly digits are accepted."
+        instructions += "\n\tEnter \"0\" to exit."
+        instructions += "\n\n\tChoice -> "
 
         try:
-            option = int(option)
+            option = int(input(instructions).strip())
 
             if option == 0:
                 print("\n\tGoodbye.")
@@ -353,21 +362,26 @@ def add_food(selected_day):
         print_header(f"\tAdd food for {selected_day}.")
         list_food(selected_day_food_dict)
 
-        instructions = "\n\tOnly accepts alphabets and spaces.\n\tEnter \"exit\" to exit.\n\n\tEnter new food name -> "
+        instructions = "\n\tOnly accepts alphabets and spaces."
+        instructions += "\n\tEnter \"exit\" to exit."
+        instructions += "\n\n\tEnter new food name -> "
+
         new_food_name = input(instructions).strip()
 
         if new_food_name == "exit":
             break
 
         duplicate = False
+
         for food_name in selected_day_food_dict:
             if new_food_name.lower() == food_name.lower():
                 duplicate = True
                 break
 
-        # Passed regex, not empty, not duplicate.
         regex = r"^[A-Za-z ]*$"
-        if re.match(regex, new_food_name) and new_food_name != "" and not duplicate:
+
+        # Passed regex, not empty, not duplicate.
+        if re.match(regex, new_food_name) and new_food_name != "" and duplicate == False:
             try:
                 new_food_price = float(input("\tEnter new food price -> ").strip())
 
@@ -387,7 +401,8 @@ def add_food(selected_day):
                 short_pause()
 
         else:
-            print("\n\tOnly accepts alphabets and spaces.\n\tFood name must not be empty and duplicates of existing food.")
+            print("\n\tOnly accepts alphabets and spaces.")
+            print("\n\tFood name must not be empty and duplicates of existing food.")
             short_pause()
 
 def delete_food(selected_day, selected_day_food_dict, selected_food_name):
@@ -417,9 +432,11 @@ def change_food_name(selected_day, selected_day_food_dict, selected_food_name):
     global food_cart_dict
 
     clear_screen()
-    print(f"\tChange food name for -> {selected_food_name}")
+    print(f"\tChange Food Name for -> {selected_food_name}")
 
-    instructions = "\n\tOnly alphabets and spaces are accepted.\n\tEnter new food name -> "
+    instructions = "\n\tOnly alphabets and spaces are accepted."
+    instructions += "\n\tEnter New Food Name -> "
+    
     new_food_name = input(instructions).strip()
 
     # ^ - Match beginning of string , $ - Match end of string
@@ -427,9 +444,9 @@ def change_food_name(selected_day, selected_day_food_dict, selected_food_name):
     regex = r"^[A-Za-z ]*$"
 
     if re.match(regex, new_food_name):
-        for food_name in selected_day_food_dict:
-            duplicate_food_name_found = False
+        duplicate_food_name_found = False
 
+        for food_name in selected_day_food_dict:
             if new_food_name.lower() == food_name.lower():
                 duplicate_food_name_found = True
 
@@ -437,24 +454,17 @@ def change_food_name(selected_day, selected_day_food_dict, selected_food_name):
                 pause()
                 break
 
-        if not duplicate_food_name_found:
-            if new_food_name.lower() != selected_food_name.lower():
+        if duplicate_food_name_found == False:
+            selected_day_food_dict[new_food_name] = selected_day_food_dict.pop(selected_food_name)
+            food_dict[selected_day] = selected_day_food_dict
 
-                selected_day_food_dict[new_food_name] = selected_day_food_dict.pop(selected_food_name)
-                food_dict[selected_day] = selected_day_food_dict
+            food_cart_dict.clear()
+            update_data()
 
-                food_cart_dict.clear()
+            print(f"\n\tChanged {selected_food_name} to {new_food_name}.")
+            short_pause()
 
-                update_data()
-
-                print(f"\n\tChanged {selected_food_name} to {new_food_name}.")
-                short_pause()
-
-                return "updated"
-            
-            else:
-                print(f"\n\tNew food name -> {new_food_name} is the same as the old name -> {selected_food_name}.")
-                pause()
+            return "updated"
 
     else:
         print("\n\tOnly alphabets and spaces are accepted.")
@@ -471,7 +481,8 @@ def update_food_price(selected_day, selected_day_food_dict, selected_food_name):
     print(f"\tOld price -> ${old_price:.2f}")
     
     try: 
-        instructions = "\n\tOnly accepts floating point numbers.\n\tFormat -> xx.yy or x.y"
+        instructions = "\n\tOnly accepts floating point numbers."
+        instructions += "\n\tFormat -> xx.yy or x.y"
         instructions += "\n\n\tNew price -> "
 
         new_price = float(input(instructions).strip())
@@ -494,13 +505,17 @@ def update_food_price(selected_day, selected_day_food_dict, selected_food_name):
 def edit_food_name_or_food_price_or_delete_food(selected_day, selected_day_food_dict, selected_food_name):
     while True:
         clear_screen()
-        print_header(f"\tAdd or delete food \ Edit food name or food price.")
+        print_header(f"\t{selected_food_name}")
+
         print("\t1. Change food name to something else.")
         print("\t2. Change food price to something else.")
         print("\t3. Delete food.")
 
         try:
-            instructions = "\n\tOnly digits are accepted.\n\tEnter \"0\" to exit.\n\n\tSelect food -> "
+            instructions = "\n\tOnly digits are accepted."
+            instructions += "\n\tEnter \"0\" to exit."
+            instructions += "\n\n\tSelect Food -> "
+            
             option = int(input(instructions).strip())
 
             if option == 0:
@@ -535,34 +550,34 @@ def edit_food_name_or_food_price_or_delete_food(selected_day, selected_day_food_
 def choose_food(selected_day_food_dict, selected_day):
     while True:
         clear_screen()
-        print_header(f"\t{selected_day}'s food menu.")
+        print_header(f"\t{selected_day}'s Food Menu.")
 
         list_food(selected_day_food_dict)
         
-        instructions = "\n\tOnly digits are accepted.\n\tEnter \"0\" to exit.\n\n\tSelect food -> "
-        option = input(instructions).strip()
+        instructions = "\n\tOnly digits are accepted."
+        instructions += "\n\tEnter \"0\" to exit."
+        instructions += "\n\n\tSelect Food -> "
 
         try:
-            option = int(option)
-            upper_bound = len(selected_day_food_dict)
+            option = int(input(instructions).strip())
 
             if option == 0:
                 break
 
-            elif option < 0 or option > upper_bound:
-                print(f"\n\tFood chosen must be in the range of 1 to {upper_bound}.")
+            elif option < 0 or option > len(selected_day_food_dict):
+                print(f"\n\tFood chosen must be in the range of 1 to {len(selected_day_food_dict)}.")
                 short_pause()
 
             else:
                 for count, food_name in enumerate(selected_day_food_dict, 1):
-                    if count == option:
+                    if option == count:
                         selected_food_name = food_name
                         break
                 
                 # When food name, food price have been updated, breaks loop and return to day selection to prevent stale data.
                 return_code = edit_food_name_or_food_price_or_delete_food(selected_day, selected_day_food_dict, selected_food_name)
 
-                if return_code == "updated" or return_code == "deleted" or return_code == "added":
+                if return_code == "updated" or return_code == "deleted":
                     return "break"
 
         except ValueError as error:
@@ -573,11 +588,15 @@ def add_delete_edit_menu(selected_day, selected_day_food_dict):
     while True:
         clear_screen()
         print_header("\tAdd, Delete, Edit food.")
-        print("\t1. Add food.")
-        print("\t2. Delete/Edit food.")
+
+        print("\t1. Add Food.")
+        print("\t2. Delete/Edit Food.")
 
         try:
-            instructions = "\n\tOnly accepts digits.\n\tEnter \"0\" to exit.\n\n\tOption -> "
+            instructions = "\n\tOnly accepts digits."
+            instructions += "\n\tEnter \"0\" to exit."
+            instructions += "\n\n\tOption -> "
+            
             option = int(input(instructions).strip())
 
             if option == 0:
@@ -606,19 +625,18 @@ def add_delete_edit_menu(selected_day, selected_day_food_dict):
 def edit_food():
     while True:
         clear_screen()
-        print_header("\tEdit food.")
+        print_header("\tEdit Food.")
 
         for count, day_of_the_week in enumerate(WEEKDAYS, 1):
             print(f"\t{count}. {day_of_the_week}")
         
         try:
-            instructions = "\n\tOnly digits are accepted.\n\tEnter \"0\" to exit.\n\n\tSelect day -> "
+            instructions = "\n\tOnly digits are accepted."
+            instructions += "\n\tEnter \"0\" to exit."
+            instructions += "\n\n\tSelect Day -> "
+
             option = int(input(instructions).strip())
-
-            # Because WEEKDAYS index starts at 0.
-            selected_day = WEEKDAYS[option - 1]
-            selected_day_food_dict = food_dict[selected_day]
-
+            
             if option == 0:
                 break
 
@@ -627,6 +645,10 @@ def edit_food():
                 short_pause()
 
             else:
+                # Because WEEKDAYS index starts at 0.
+                selected_day = WEEKDAYS[option - 1]
+                selected_day_food_dict = food_dict[selected_day]
+                
                 add_delete_edit_menu(selected_day, selected_day_food_dict)
 
         except ValueError as error:
@@ -637,25 +659,27 @@ def admin_menu(username):
     while True:
         clear_screen()
         print_header(f"\tAdmin console.\n\tProceed with caution.")
-        print(f"\tWelcome {username}.\n")
-        print("\t1. Shutdown server.")
-        print("\t2. Edit food name/price menu.")
 
-        instructions = "\n\tEnter \"0\" to exit.\n\tOnly accepts digits.\n\n\tOption -> "
-        option = input(instructions).strip()
+        print(f"\tWelcome {username}.\n")
+        print("\t1. Edit food name/price menu.")
+        print("\t2. Shutdown server.")
+
+        instructions = "\n\tEnter \"0\" to exit."
+        instructions += "\n\tOnly accepts digits."
+        instructions += "\n\n\tOption -> "
 
         try:
-            option = int(option)
+            option = int(input(instructions).strip())
 
             if option == 0:
                 break
 
             elif option == 1:
-                shutdown_server()
-                
-            elif option == 2:
                 edit_food()
-            
+
+            elif option == 2:
+                shutdown_server()
+                       
             else:
                 print(f"\n\t{option} is invalid.")
                 short_pause()
@@ -669,7 +693,9 @@ def login_menu():
         clear_screen()
         print_header("\tLogin.")
 
-        instructions = "\tFor username, only alphabets are accepted.\n\tAbove rule does not apply for password.\n"
+        instructions = "\tFor username, only alphabets are accepted."
+        instructions += "\n\tAbove rule does not apply for password.\n"
+        
         print(instructions)
 
         username = input("\tUsername -> ").lower().strip()
