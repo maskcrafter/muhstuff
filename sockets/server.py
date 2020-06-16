@@ -5,7 +5,6 @@ import sys
 from os import system, getcwd, path
 from time import sleep
 
-
 class Server:
     def __init__(self, ip_address, port):
         self.ip_address = ip_address

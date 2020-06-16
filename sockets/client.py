@@ -1,6 +1,7 @@
 import socket
 import re
 import sys
+
 from time import sleep
 from os import system, getcwd, path
 from calendar import day_name
@@ -134,6 +135,8 @@ def order_food(local_food_dict):
 
                     if order_quantity == 0:
                         print(f"\n\tYou have cancelled ordering {ordered_food_name}.")
+                        short_pause()
+                        break
                     
                     elif order_quantity < 0:
                         print("\n\tNegative values are not accepted.")
@@ -179,7 +182,7 @@ def search_food():
                 order_food(search_hits_dict)
 
             else:
-                print(f"\n\tNo food similar to {food_to_search} found.")
+                print(f"\n\tSearch founds no food similar to \"{food_to_search}\".")
                 short_pause()
  
         else:
@@ -196,6 +199,7 @@ def list_order():
             print_header("\tYour order.")
 
             total_price = 0
+
             for count, food_name in enumerate(food_cart_dict, 1):
                 price_and_quantity_list = food_cart_dict[food_name]
                 
@@ -213,11 +217,12 @@ def list_order():
             total_price = f"${total_price:.2f}".rjust(55)
             print_header(f"\tTotal{total_price}")
 
-            regex = r"\w{1}"
             instructions = "\n\tOnly 'q', 's', 'e' are accepted."
             instructions += "\n\n\tEnter \"q\" to go back to the main menu.\n\tEnter \"s\" to print out receipt."
             instructions += "\n\tEmpty \"e\" to empty cart.\n\n\tOption -> "
+            
             option = input(instructions).lower().strip()
+            regex = r"\w{1}"
 
             if re.match(regex, option):
                 if option == 'q':
@@ -232,7 +237,7 @@ def list_order():
                 elif option == 'e':
                     food_cart_dict.clear()
                     clear_screen()
-                    print("\tEmptied food cart")
+                    print("\tEmptied food cart.")
                     pause()
                     break
 
@@ -261,6 +266,7 @@ def print_receipt(filename):
             data += "=" * 64
 
             total_price = 0
+            
             for count, food_name in enumerate(food_cart_dict, 1):
                 price_and_quantity_list = food_cart_dict[food_name]
 
@@ -307,12 +313,12 @@ def user_menu(username):
                 print("\n\tGoodbye.")
                 break
 
-            elif option == 2:
-                search_food()
-
             elif option == 1:
                 list_todays_food_menu()
-
+            
+            elif option == 2:
+                search_food()
+           
             elif option == 3:
                 list_order()
 
