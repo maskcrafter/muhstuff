@@ -355,9 +355,9 @@ def add_food(selected_day):
     global food_dict
     global food_cart_dict
 
-    while True:
-        selected_day_food_dict = food_dict[selected_day]
+    selected_day_food_dict = food_dict[selected_day]
 
+    while True:
         clear_screen()
         print_header(f"\tAdd food for {selected_day}.")
         list_food(selected_day_food_dict)
@@ -373,6 +373,7 @@ def add_food(selected_day):
 
         duplicate = False
 
+        # Check for the presence of same key in the dictionary.
         for food_name in selected_day_food_dict:
             if new_food_name.lower() == food_name.lower():
                 duplicate = True
@@ -410,12 +411,14 @@ def delete_food(selected_day, selected_day_food_dict, selected_food_name):
     global food_cart_dict
     
     if len(selected_day_food_dict) > 1:
-        selected_day_food_dict.pop(selected_food_name)
         food_cart_dict.clear()
-        food_dict[selected_day] = selected_day_food_dict
 
+        selected_day_food_dict.pop(selected_food_name)
+        food_dict[selected_day] = selected_day_food_dict
+       
         print(f"\n\tDeleted {selected_food_name} from {selected_day}'s menu.")
         update_data()
+        pause()
 
         return "deleted"
     
@@ -764,8 +767,8 @@ try:
     login_menu()
   
 except KeyboardInterrupt as error:
-    clear_screen()
-    print("Interrupted by \"CTRL + C\"\nGoodbye.")
+    print("\n\tInterrupted by \"CTRL + C\"")
+    print("\tGoodbye.")
 
 except Exception as error:
     print(f"Error -> {error}")
