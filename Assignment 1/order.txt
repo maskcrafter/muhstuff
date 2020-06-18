@@ -1,14 +1,15 @@
 Thank you for ordering from SPAM.
-Order number: #146
+Order number: #59
 
 ================================================================
 Your order
 ================================================================
-1. Asam Laksa X 5                                     $24.50
+1. Plain Prata X 10                                   $15.00
+2. Egg Prata X 5                                      $12.50
 ================================================================
-Less discount 10%                                     $2.45
-Total                                                 $22.05
+Less discount 20%                                     $5.50
+Total                                                 $22.00
 ================================================================
 
 Please present this receipt at the counter.
-Total amount payable -> $22.05
+Total amount payable -> $22.00

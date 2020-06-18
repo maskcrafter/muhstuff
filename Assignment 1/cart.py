@@ -21,9 +21,11 @@ class Data:
     def load_data_to_nested_dict(self, food_data):
         temp_food_dict = dict()
 
+        # Outer Loop. Monday to Sunday.
         for day_of_the_week in self.weekdays:
             food_name_and_price_dict = dict()
 
+            # Inner Loop. If day matches outer loop, create nested dictionary.
             for food in food_data:
                 food_day, food_name, food_price = food.split(',')
 
@@ -55,9 +57,11 @@ class Data:
         with open(filename, 'w+') as f:
             data = ""
 
+            # Outer loop -> Monday to Sunday.
             for day_of_the_week in food_dict:
                 day_of_the_week_food_dict = food_dict.get(day_of_the_week)
 
+                # Inner loop -> Food for a given day. 
                 for food_name in day_of_the_week_food_dict:
                     food_price = day_of_the_week_food_dict.get(food_name)
                     data += f"{day_of_the_week},{food_name},{food_price}\n"
@@ -236,14 +240,14 @@ def print_receipt(filename, discount):
                 food_price = price_and_quantity_list[0]
                 food_quantity = price_and_quantity_list[1]
 
-                food_price *= food_quantity
+                food_price *= food_quantity # food_price = food_price * food_quantity
                 total_price += food_price
 
                 food_name_and_quantity = f"{food_name} X {food_quantity}"
                 data += f"\n{count}. {food_name_and_quantity.ljust(50)} ${food_price:.2f}"
 
             discounted_price = total_price * (discount / 100.0)
-            total_price -= discounted_price
+            total_price -= discounted_price # total_price = total_price - discounted_price
             discounted_price = f"${discounted_price:.2f}".rjust(41)
 
             footer = f"\nLess discount {discount}% {discounted_price}"
@@ -275,6 +279,7 @@ def list_order(discount):
             for count, food_name in enumerate(food_data.food_cart_dict, 1):
                 price_and_quantity_list = food_data.food_cart_dict.get(food_name)
 
+                # Format of food_cart -> Chicken Rice : [2.50(price), 5(quantity)]
                 food_price = price_and_quantity_list[0]
                 food_quantity = price_and_quantity_list[1]
 
@@ -303,7 +308,7 @@ def list_order(discount):
             instructions += "\n\n\tOption -> "
 
             option = input(instructions).lower().strip()
-            regex = r"\w{1}"
+            regex = r"^\w{1}$"  # Accepts only 1 char.
             regex_passed = re.match(regex, option)
 
             if regex_passed:
@@ -326,6 +331,10 @@ def list_order(discount):
                 else:
                     print("\n\tInvalid option.")
                     short_pause()
+
+            else:
+                print("\n\tOnly 'q', 's', 'e' are accepted.")
+                short_pause()
             
         else:
             print("\n\tFood cart is empty.")
@@ -423,6 +432,7 @@ def update_food_price(selected_day, selected_day_food_dict, selected_food_name):
     print_header("\tUpdate Food Price.")
     print(f"\tOld Price -> ${old_price:.2f}")
 
+    # try-except because regex is not the right tool for confirming if input is indeed a float.
     try:
         instructions = "\n\tOnly accepts floating point numbers."
         instructions += "\n\tFormat -> xx.yy or x.y"
@@ -449,11 +459,12 @@ def delete_food(selected_day, selected_day_food_dict, selected_food_name):
     if len(selected_day_food_dict) > 1:
         food_data.food_cart_dict.clear()
 
+        # 1. Delete 2. Update nested dictionary. 3. Save updated nested dictionary to file.
         selected_day_food_dict.pop(selected_food_name)
         food_data.food_dict[selected_day] = selected_day_food_dict
+        spam.convert_nested_dict_into_data_and_store_it_in_file(food_file, food_data.food_dict)
 
         print(f"\n\tDeleted {selected_food_name} from {selected_day}'s menu.")
-        spam.convert_nested_dict_into_data_and_store_it_in_file(food_file, food_data.food_dict)
 
         pause()
         return "deleted"
@@ -576,10 +587,11 @@ def add_food(selected_day):
             try:
                 new_food_price = float(input("\tEnter new food price -> ").strip())
 
+                # Clear food cart because we do not want food cart to contain stale data.
+                food_data.food_cart_dict.clear()
+
                 selected_day_food_dict[new_food_name] = new_food_price
                 food_data.food_dict[selected_day] = selected_day_food_dict
-
-                food_data.food_cart_dict.clear()
                 spam.convert_nested_dict_into_data_and_store_it_in_file(food_file, food_data.food_dict)
 
                 print(f"\n\tSuccessfully added {new_food_name} -> ${new_food_price:.2f} .")
@@ -590,6 +602,10 @@ def add_food(selected_day):
             except ValueError:
                 print("\n\tOnly accepts floating point numbers")
                 short_pause()
+        
+        else:
+            print("\n\tDuplicate item found or new food name is empty.")
+            short_pause()
 
 def add_delete_edit_menu(selected_day, selected_day_food_dict):
     while True:
@@ -700,7 +716,7 @@ def authenticate_user(username, password):
             cursor = sqlite_connection.cursor()
 
             query = f"SELECT username, password, is_admin, discount FROM credentials WHERE "
-            query += f"username = \"{username}\" and password = \"{password}\" limit 1"
+            query += f"username = \"{username}\" and password = \"{password}\" LIMIT 1"
 
             cursor.execute(query)
             result = cursor.fetchall()
@@ -712,6 +728,7 @@ def authenticate_user(username, password):
             sys.exit(1)
         
         finally:
+            # If sqlite connection is active, close it.
             if sqlite_connection:
                 sqlite_connection.close()
 
