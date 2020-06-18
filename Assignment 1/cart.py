@@ -372,8 +372,9 @@ def user_menu(username, discount):
                 list_order(discount)
 
         except KeyboardInterrupt:
-            print("\n\n\tDetected CTRL+C, terminating program.")
+            print("\n\n\tDetected CTRL+C, logging out.")
             print("\tGoodbye.")
+            short_pause()
             break
 
         except ValueError:
@@ -699,8 +700,9 @@ def admin_menu(username):
                 short_pause()
 
         except KeyboardInterrupt:
-            print("\n\n\tDetected CTRL+C, terminating program.")
+            print("\n\n\tDetected CTRL+C, logging out.")
             print("\tGoodbye.")
+            short_pause()
             break
 
         except ValueError:
