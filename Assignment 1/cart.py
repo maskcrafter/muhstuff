@@ -753,7 +753,7 @@ def login_menu():
             regex = r"^[A-Za-z]*$"
             passed_regex = re.match(regex, username)
 
-            if passed_regex:
+            if passed_regex and username != "":
                 password = input("\tPassword -> ")
 
                 if password != "":
