@@ -246,20 +246,30 @@ def print_receipt(filename, discount):
                 food_name_and_quantity = f"{food_name} X {food_quantity}"
                 data += f"\n{count}. {food_name_and_quantity.ljust(50)} ${food_price:.2f}"
 
+            gross_total_price = f"${total_price:.2f}".rjust(47)
             discounted_price = total_price * (discount / 100.0)
-            total_price -= discounted_price # total_price = total_price - discounted_price
-            discounted_price = f"${discounted_price:.2f}".rjust(41)
+            net_total_price = total_price - discounted_price
 
-            footer = f"\nLess discount {discount}% {discounted_price}"
-            total_price = f"${total_price:.2f}".rjust(54)
-            footer += f"\nTotal {total_price}\n"
+            footer = f"\nGross Total: {gross_total_price}"
+
+            discounted_price = str(f"{discounted_price:.2f}")
+            discounted_price = f"${discounted_price}".rjust(40)
+
+            footer += f"\nLess {discount}% Discount: {discounted_price}"
+
+            price_to_be_paid = net_total_price
+
+            net_total_price = str(f"{net_total_price:.2f}")
+            net_total_price = f"${net_total_price}".rjust(49)
+
+            footer += f"\nNet total: {net_total_price}\n"
 
             data += "\n"
             data += "=" * 64
             data += f"{footer}"
             data += "=" * 64
             data += "\n\nPlease present this receipt at the counter.\n"
-            data += f"Total amount payable -> {total_price.strip()}"
+            data += f"Total amount payable -> ${price_to_be_paid:.2f}"
 
             f.write(data)
 
@@ -291,15 +301,23 @@ def list_order(discount):
 
                 print(f"\t{count}. {food_name_and_quantity.ljust(50)} {food_price}")
 
+            gross_total_price = f"${total_price:.2f}".rjust(47)
             discounted_price = total_price * (discount / 100.0)
-            total_price -= discounted_price
-            discounted_price = f"${discounted_price:.2f}".rjust(41)
+            net_total_price = total_price - discounted_price
 
-            footer = f"\tLess discount {discount}% {discounted_price}"
-            total_price = f"${total_price:.2f}".rjust(54)
-            footer += f"\n\tTotal {total_price}"
+            footer = f"\tGross Total: {gross_total_price}"
 
-            print_header(footer)
+            discounted_price = str(f"{discounted_price:.2f}")
+            discounted_price = f"${discounted_price}".rjust(40)
+
+            footer += f"\n\tLess {discount}% Discount: {discounted_price}"
+
+            net_total_price = str(f"{net_total_price:.2f}")
+            net_total_price = f"${net_total_price}".rjust(49)
+
+            footer += f"\n\tNet total: {net_total_price}"
+
+            print_header(f"{footer}")
 
             instructions = "\n\tOnly 'q', 's', 'e' are accepted."
             instructions += "\n\n\tEnter \"q\" to go back to the main menu."
