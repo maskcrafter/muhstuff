@@ -1,15 +1,15 @@
 Thank you for ordering from SPAM.
-Order number: #59
+Order number: #158
 
 ================================================================
 Your order
 ================================================================
-1. Plain Prata X 10                                   $15.00
-2. Egg Prata X 5                                      $12.50
+1. Tom Yam X 10                                       $70.00
 ================================================================
-Less discount 20%                                     $5.50
-Total                                                 $22.00
+Gross Total:                                          $70.00
+Less 10% Discount:                                    $7.00
+Net total:                                            $63.00
 ================================================================
 
 Please present this receipt at the counter.
-Total amount payable -> $22.00
+Total amount payable -> $63.00
