@@ -19,26 +19,21 @@ class Login_Server(Server):
         self.db_filename = db_filename
 
     def authenticate_user(self, username, password):
-        file_exist = path.exists(self.db_filename)
+        db_file_exist = path.exists(self.db_filename)
         
-        if file_exist:
+        if db_file_exist:
             try:
                 sqlite_connection = sqlite3.connect(self.db_filename)
                 print("Connection to DB successful.")
 
                 cursor = sqlite_connection.cursor()
-                query = f"SELECT username, password, isAdmin FROM credentials where username = \"{username}\" and password = \"{password}\" limit 1"
+                
+                query = f"SELECT username, password, is_admin, discount FROM credentials WHERE "
+                query += f"username = \"{username}\" and password = \"{password}\" LIMIT 1"
 
                 cursor.execute(query)
                 result = cursor.fetchall()
-
-                # Result is tuple contained in a list -> [('admin', 'password', '1')] , and that is why we need to:
-                # 1. Extract the tuple -> index 0
-                # 2. Convert the tuple to a list -> list()
-                if len(result) > 0:
-                    result = result[0]
-                    result = list(result)
-
+               
                 return result
 
             except sqlite3.Error as error:
@@ -103,19 +98,24 @@ class Simple_Food_Server(Login_Server):
                     result = self.authenticate_user(username_and_password[0], username_and_password[1])
 
                     # Authentication is successful.
+                    # [('admin', '21232f297a57a5a7438...e4a801fc3', 'yes', '15')]
                     if len(result) > 0:
+                        authentication_result = result[0]
+            
                         login = True
-                        isAdmin = int(result[2])
-                        username = result[0]
+                        username = authentication_result[0]
+                        is_admin = authentication_result[2]
+                        discount_rate = float(authentication_result[3])
 
                     # Authentication not successful.
                     else:
                         login = False
-                        isAdmin = 0
                         username = ""
+                        is_admin = "no"
+                        discount_rate = 0
 
-                    authentication = str([login, isAdmin, username]).encode()
-                    connection.send(authentication)
+                    authentication_data = str([login, username, is_admin, discount_rate]).encode()
+                    connection.send(authentication_data)
                        
                 elif data_received == 'shutdown':
                     return data_received
@@ -164,11 +164,11 @@ try:
     ip_address = "0.0.0.0"
     port = 4444
 
-    filename = getcwd() + "\\sockets\\food.txt"
-    db_filename = getcwd() + "\\sockets\\MyCreds.db"
+    filename = getcwd() + "\\food.txt"
+    db_filename = getcwd() + "\\creds.db"
 
     new_simple_food_server = Simple_Food_Server(ip_address, port, db_filename, filename)
     new_simple_food_server.food_server_start()
 
 except Exception as error:
-    print(f"Error -> {error}")
+    print(error)

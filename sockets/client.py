@@ -7,6 +7,7 @@ from os import system, getcwd, path
 from calendar import day_name
 from datetime import date
 from random import randint
+from hashlib import md5
 
 def pause():
     print()
@@ -32,7 +33,8 @@ def download_data():
         return eval(data)
     
     except Exception as error:
-        print(f"Error -> {error}")
+        print(error)
+        sys.exit(1)
 
     finally:
         client_socket.close()
@@ -50,16 +52,17 @@ def upload_data():
             client_socket.send(data)
     
     except Exception as error:
-        print(f"Error -> {error}")
+        print(error)
+        sys.exit(1)
 
     finally:
         client_socket.close()
 
 def convert_data_to_nested_dict(food_list):
-    temp_food_dict = {}
+    temp_food_dict = dict()
 
     for day_of_the_week in WEEKDAYS:
-        food_name_and_price_dict = {}
+        food_name_and_price_dict = dict()
 
         for food in food_list:
             food_day, food_name, food_price = food.split(',')
@@ -119,7 +122,7 @@ def order_food(local_food_dict):
                 for count, food_name in enumerate(local_food_dict, 1):
                     if option == count:
                         ordered_food_name = food_name
-                        ordered_food_price = local_food_dict[food_name]
+                        ordered_food_price = local_food_dict.get(food_name)
                         break
 
                 clear_screen()
@@ -154,12 +157,13 @@ def order_food(local_food_dict):
                         break
                 
                 else:
-                    print("\n\tQuantity must be in digits.\n\tAdditionally check min\max digits.")
+                    print("\n\tQuantity must be in digits.")
+                    print("\tAdditionally check min|max digits.")
+                    short_pause()
 
-        except ValueError as error:
-            print(f"\n\tInvalid option -> {error}")
-
-        short_pause()
+        except ValueError:
+            print(f"\n\tOnly accepts digits.")
+            short_pause()
 
 def search_food():
     while True:
@@ -175,15 +179,17 @@ def search_food():
         # https://stackoverflow.com/questions/30994738/how-to-make-input-only-accept-a-z-etc
         # https://pythex.org/
         regex = r"^[A-Za-z ]*$"
-        search_hits_dict = {}
+        passed_regex = re.match(regex, food_to_search)
 
-        if re.match(regex, food_to_search) and food_to_search != "":
+        search_hits_dict = dict()
+
+        if passed_regex and food_to_search != "":
             if food_to_search == "exit":
                 break
       
             for food_name in todays_food_dict:
                 if food_name.lower().find(food_to_search) != -1:
-                    search_hits_dict[food_name] = todays_food_dict[food_name]
+                    search_hits_dict[food_name] = todays_food_dict.get(food_name)
 
             if len(search_hits_dict) > 0:
                 order_food(search_hits_dict)
@@ -196,7 +202,7 @@ def search_food():
             print("\n\tPlease check your input again.")
             short_pause()
 
-def list_order():    
+def list_order(discount_rate):    
     global food_cart_dict
 
     while True:
@@ -208,7 +214,7 @@ def list_order():
             total_price = 0
 
             for count, food_name in enumerate(food_cart_dict, 1):
-                price_and_quantity_list = food_cart_dict[food_name]
+                price_and_quantity_list = food_cart_dict.get(food_name)
                 
                 food_price = price_and_quantity_list[0]
                 food_quantity = price_and_quantity_list[1]
@@ -221,8 +227,23 @@ def list_order():
 
                 print(f"\t{count}. {food_name_and_quantity.ljust(50)} {food_price}")
             
-            total_price = f"${total_price:.2f}".rjust(55)
-            print_header(f"\tTotal{total_price}")
+            gross_total_price = f"${total_price:.2f}".rjust(47)
+            discounted_price = total_price * (discount_rate / 100.0)
+            net_total_price = total_price - discounted_price
+
+            footer = f"\tGross Total: {gross_total_price}"
+
+            discounted_price = str(f"{discounted_price:.2f}")
+            discounted_price = f"${discounted_price}".rjust(38)
+            
+            footer += f"\n\tLess {discount_rate}% Discount: {discounted_price}"
+        
+            net_total_price = str(f"{net_total_price:.2f}")
+            net_total_price = f"${net_total_price}".rjust(49)
+
+            footer += f"\n\tNet total: {net_total_price}"
+
+            print_header(f"{footer}")
 
             instructions = "\n\tOnly 'q', 's', 'e' are accepted."
             instructions += "\n\n\tEnter \"q\" to go back to the main menu."
@@ -230,14 +251,16 @@ def list_order():
             instructions += "\n\tEmpty \"e\" to empty cart.\n\n\tOption -> "
             
             option = input(instructions).lower().strip()
-            regex = r"\w{1}"
+            
+            regex = r"^\w{1}$"
+            passed_regex = re.match(regex, option)
 
-            if re.match(regex, option):
+            if passed_regex:
                 if option == 'q':
                     break
 
                 elif option == 's':
-                    print_receipt(RECEIPT_FILE_PATH)
+                    print_receipt(RECEIPT_FILE_PATH, discount_rate)
                     print("\n\tSave successful.")
                     pause()
                     break
@@ -262,7 +285,7 @@ def list_order():
             pause() 
             break
 
-def print_receipt(filename):
+def print_receipt(filename, discount_rate):
     if len(food_cart_dict) > 0:
         with open(filename, 'w') as f:
             order_number = randint(1, 500)
@@ -276,25 +299,41 @@ def print_receipt(filename):
             total_price = 0
 
             for count, food_name in enumerate(food_cart_dict, 1):
-                price_and_quantity_list = food_cart_dict[food_name]
+                price_and_quantity_list = food_cart_dict.get(food_name)
 
                 food_price = price_and_quantity_list[0]
                 food_quantity = price_and_quantity_list[1]
 
-                food_price *= food_quantity
-                total_price += food_price
+                food_price *= food_quantity # food_price = food_price * food_quantity
+                total_price += food_price   # total_price = total_price + food_price
 
                 food_name_and_quantity = f"{food_name} X {food_quantity}"
                 data += f"\n{count}. {food_name_and_quantity.ljust(50)} ${food_price:.2f}"
 
-            total_price = f"${total_price:.2f}".rjust(55)
+            gross_total_price = f"${total_price:.2f}".rjust(47)
+            discounted_price = total_price * (discount_rate / 100.0)
+            net_total_price = total_price - discounted_price
+
+            footer = f"\nGross Total: {gross_total_price}"
+
+            discounted_price = str(f"{discounted_price:.2f}")
+            discounted_price = f"${discounted_price}".rjust(38)
+
+            footer += f"\nLess {discount_rate}% Discount: {discounted_price}"
+
+            price_to_be_paid = net_total_price
+
+            net_total_price = str(f"{net_total_price:.2f}")
+            net_total_price = f"${net_total_price}".rjust(49)
+
+            footer += f"\nNet total: {net_total_price}"
 
             data += "\n"
             data += "=" * 64
-            data += f"\nTotal{total_price}\n"
+            data += f"{footer}\n"
             data += "=" * 64
             data += "\n\nPlease present this receipt at the counter.\n"
-            data += f"Total amount payable -> {total_price.strip()}"
+            data += f"Total amount payable -> ${price_to_be_paid:.2f}"
 
             f.write(data)
         
@@ -302,10 +341,11 @@ def print_receipt(filename):
         print(f"\n\tCart is empty. There is nothing to be printed.")
         pause()
 
-def user_menu(username):
+def user_menu(username, discount_rate):
     while True:
         clear_screen()
         print_header("\tAutomated Food Menu.")
+
         print(f"\tWelcome {username}.\n")
         print("\t1. Display today's menu.")
         print("\t2. Search food.")
@@ -329,10 +369,16 @@ def user_menu(username):
                 search_food()
            
             elif option == 3:
-                list_order()
+                list_order(discount_rate)
+        
+        except KeyboardInterrupt:
+            print("\n\n\tInterrupted by \"CTRL + C\"")
+            print("\tLogging out.")
+            short_pause()
+            break
 
-        except ValueError as error:
-            print(f"\n\tPlease check your input -> {error}")
+        except ValueError:
+            print(f"\n\tOnly accepts digits.")
             short_pause()
 
 def shutdown_server():
@@ -345,7 +391,8 @@ def shutdown_server():
         print("\n\tShutdown completed.")
 
     except Exception as error:
-        print(f"\n\tError -> {error}")
+        print(f"\n\t{error}")
+        pause()
 
     finally:
         client_socket.close()
@@ -380,9 +427,10 @@ def add_food(selected_day):
                 break
 
         regex = r"^[A-Za-z ]*$"
+        passed_regex = re.match(regex, new_food_name)
 
         # Passed regex, not empty, not duplicate.
-        if re.match(regex, new_food_name) and new_food_name != "" and duplicate == False:
+        if passed_regex and new_food_name != "" and duplicate == False:
             try:
                 new_food_price = float(input("\tEnter new food price -> ").strip())
 
@@ -397,8 +445,8 @@ def add_food(selected_day):
 
                 return "added"
 
-            except ValueError as error:
-                print(f"\n\tError -> {error}")
+            except ValueError:
+                print(f"\n\tPrice must be in floating point format.")
                 short_pause()
 
         else:
@@ -427,6 +475,8 @@ def delete_food(selected_day, selected_day_food_dict, selected_food_name):
         pause()
         
 def update_data():
+    global food_dict
+
     upload_data()
     food_dict = convert_data_to_nested_dict(download_data())
 
@@ -477,7 +527,7 @@ def update_food_price(selected_day, selected_day_food_dict, selected_food_name):
     global food_dict
     global food_cart_dict
 
-    old_price = selected_day_food_dict[selected_food_name]
+    old_price = selected_day_food_dict.get(selected_food_name)
 
     clear_screen()
     print_header("\tUpdate food price.")
@@ -501,8 +551,8 @@ def update_food_price(selected_day, selected_day_food_dict, selected_food_name):
 
         return "updated"
     
-    except ValueError as error:
-        print(f"\n\tInput is not a floating point number -> {error}")
+    except ValueError:
+        print(f"\n\tPrice must be in floating point format.")
         short_pause()
 
 def edit_food_name_or_food_price_or_delete_food(selected_day, selected_day_food_dict, selected_food_name):
@@ -546,8 +596,8 @@ def edit_food_name_or_food_price_or_delete_food(selected_day, selected_day_food_
                 if return_code == "deleted":
                     return "deleted"
 
-        except ValueError as error:
-            print(f"\n\tOnly digits are accepted -> {error}")
+        except ValueError:
+            print(f"\n\tOnly digits are accepted.")
             short_pause()
 
 def choose_food(selected_day_food_dict, selected_day):
@@ -583,8 +633,8 @@ def choose_food(selected_day_food_dict, selected_day):
                 if return_code == "updated" or return_code == "deleted":
                     return "break"
 
-        except ValueError as error:
-            print(f"\n\tOnly digits are accepted -> {error}")
+        except ValueError:
+            print(f"\n\tOnly digits are accepted.")
             short_pause()
 
 def add_delete_edit_menu(selected_day, selected_day_food_dict):
@@ -621,8 +671,8 @@ def add_delete_edit_menu(selected_day, selected_day_food_dict):
                 print("\n\tInvalid input.")
                 short_pause()
 
-        except ValueError as error:
-            print(f"\n\tOnly digits are accepted. -> {error}")
+        except ValueError:
+            print(f"\n\tOnly digits are accepted.")
             short_pause()
 
 def edit_food():
@@ -644,18 +694,18 @@ def edit_food():
                 break
 
             elif option < 0 or option > len(WEEKDAYS):
-                print("\n\tOnly option 1-7 are accepted.")
+                print(f"\n\tOnly option 1 - {len(WEEKDAYS)} are accepted.")
                 short_pause()
 
             else:
                 # Because WEEKDAYS index starts at 0.
                 selected_day = WEEKDAYS[option - 1]
-                selected_day_food_dict = food_dict[selected_day]
+                selected_day_food_dict = food_dict.get(selected_day)
                 
                 add_delete_edit_menu(selected_day, selected_day_food_dict)
 
-        except ValueError as error:
-            print(f"\n\tOnly digits are accepted -> {error}")
+        except ValueError:
+            print(f"\n\tOnly digits are accepted.")
             short_pause()
        
 def admin_menu(username):
@@ -664,7 +714,7 @@ def admin_menu(username):
         print_header(f"\tAdmin console.\n\tProceed with caution.")
 
         print(f"\tWelcome {username}.\n")
-        print("\t1. Edit food name/price menu.")
+        print("\t1. Edit food name|price.")
         print("\t2. Shutdown server.")
 
         instructions = "\n\tEnter \"0\" to exit."
@@ -687,8 +737,14 @@ def admin_menu(username):
                 print(f"\n\t{option} is invalid.")
                 short_pause()
         
-        except ValueError as error:
-            print(f"\n\tOnly accepts digits -> {error}")
+        except KeyboardInterrupt:
+            print("\n\n\tInterrupted by \"CTRL + C\"")
+            print("\tLogging out.")
+            short_pause()
+            break
+
+        except ValueError:
+            print(f"\n\tOnly accepts digits.")
             short_pause()
 
 def login_menu():
@@ -701,14 +757,19 @@ def login_menu():
         
         print(instructions)
 
-        username = input("\tUsername -> ").lower().strip()
-        regex = r"^[A-Za-z]*$"
+        try:
+            username = input("\tUsername -> ").lower().strip()
 
-        if re.match(regex, username):
-            password = input("\tPassword -> ")
+            regex = r"^[A-Za-z]*$"
+            passed_regex = re.match(regex, username)
 
-            if password != "":
-                try:
+            # Passed regex, username not empty.
+            if passed_regex and username != "":
+                password = input("\tPassword -> ")
+
+                if password != "":
+                    hashed_password = md5(password.encode()).hexdigest()
+
                     client_socket = connect_to_server()
                     client_socket.connect((HOST, PORT))
 
@@ -716,40 +777,50 @@ def login_menu():
                     server_reply = client_socket.recv(255).decode()
 
                     if server_reply == "ok":
-                        username_and_password = str([username, password]).encode()
+                        username_and_password = str([username, hashed_password]).encode()
                         client_socket.send(username_and_password)
 
-                        authentication_details = eval(client_socket.recv(255).decode())
+                        # authentication_data = str([login, username, is_admin, discount_rate]).encode()
+                        authentication_data = eval(client_socket.recv(255).decode())
                         client_socket.close()
 
-                        login_ok = authentication_details[0]
-                        is_admin = bool(authentication_details[1])
-                        username = authentication_details[2]
+                        login_ok = authentication_data[0]
+                        username = authentication_data[1]
+                        is_admin = authentication_data[2]
+                        discount_rate = authentication_data[3]
 
                         if login_ok:
                             print("\n\tLogging you in.")
                             short_pause()
                             
-                            if is_admin:
+                            if is_admin == "yes":
                                 admin_menu(username)
                             else:
-                                user_menu(username)
+                                user_menu(username, discount_rate)
 
                         else:
                             print("\n\tEither your username or password is wrong.")
-                
-                except Exception as error:
-                    print(f"\n\tError -> {error}")
-                    pause()
-            
+                            short_pause()
+                    
+                else:
+                    print("\n\tPassword must be not empty.")
+                    short_pause()
+
             else:
-                print("\n\tPasssword must not empty.")
+                print("\n\tOnly accepts alphabets and no spaces for username.")
+                print("\tCheck your input again.")
+                short_pause()
 
-        else:
-            print("\n\tOnly accepts alphabets and no spaces for username.\n\tCheck your input again.")
+        except KeyboardInterrupt:
+            print("\n\n\tInterrupted by \"CTRL + C\"")
+            print("\tExiting program.")
+            short_pause()
+            break
+                
+        except Exception as error:
+            print(f"\n\t{error}")
+            sys.exit(1)
         
-        short_pause()
-
 try:
     WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     DAY_OF_THE_WEEK = day_name[date.today().weekday()]
@@ -761,14 +832,11 @@ try:
     PORT = 4444
 
     food_dict = convert_data_to_nested_dict(download_data())
-    todays_food_dict = food_dict[DAY_OF_THE_WEEK]
-    food_cart_dict = {}
+    todays_food_dict = food_dict.get(DAY_OF_THE_WEEK)
+    food_cart_dict = dict()
 
     login_menu()
-  
-except KeyboardInterrupt as error:
-    print("\n\tInterrupted by \"CTRL + C\"")
-    print("\tGoodbye.")
 
 except Exception as error:
-    print(f"Error -> {error}")
+    print(error)
+    sys.exit(1)
