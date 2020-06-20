@@ -4,7 +4,7 @@
 {% block content %}
     <p>Food menu for ({{ current_day }}).</p>
 
-    <form action = '/order/cart'>
+    <form action = '/order/cart' method = "POST">
         <table border = "1px solid black" width = '600px' style = "text-align : center">
             <tr>
                 <th colspan = "2">Food Name</th>

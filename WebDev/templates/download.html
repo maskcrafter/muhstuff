@@ -5,19 +5,19 @@
 {% block content %}
     <p><u>Directory Listing</u></p>
 
-    <form method = "get" action = '/download'>
-        <table border="1px solid black" width='350px' style="text-align : center">
+    <form action = '/download' method = "POST">
+        <table border = "1px solid black" width = '350px' style = "text-align : center">
 
-            {% for file in files %}
+            {% for file in files_in_directory %}
                 <tr>
-                    <td><p>{{ file }}.txt</p></td>
-                    <td><input type = 'submit' name = "{{ file }}" value = "Download {{ file }}.txt"><br></td>
+                    <td><p>{{ file }}</p></td>
+                    <td><input type = 'submit' name = "{{ file }}" value = "Download"><br></td>
                 </tr>
             {% endfor %}
 
         </table>
     </form>
 
-    <p><b>{{ num_of_files }}</b> file(s) Found.</p>
-    <p>Click <a href='/'><b>HERE</b></a> for the Main Menu.</p>
+    <p><b>{{ number_of_files }}</b> file(s) Found.</p>
+    <p>Click <a href = '/'>Back to Main Menu</p>
 {% endblock %}

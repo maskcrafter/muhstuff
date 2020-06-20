@@ -19,18 +19,18 @@ food_menu_of_the_day_dict = dict()
 total_quantity_and_price_list = list()
 url_list = list()
 
-order_raised = False
-
 app = Flask(__name__)
 
 @app.errorhandler(404)
 def page_not_found(error_code):
+    # Error page.
     return render_template('404.html'), 404
 
 @app.route('/')
 def home():
     global url_list
 
+    # Forming url and pass it to index html so it can be rendered on webpage.
     for day_of_the_week in WEEKDAYS:
         url_list.append(f"/{day_of_the_week}")
 
@@ -55,7 +55,7 @@ def edit(day_of_the_week):
     else:
         return render_template('404.html')
 
-@app.route('/admin/save')
+@app.route('/admin/save', methods = ['GET', 'POST'])
 def save_changes():
     global food_dict
     global food_cart_dict
@@ -66,81 +66,89 @@ def save_changes():
     food_cart_dict.clear()
     total_quantity_and_price_list.clear()
 
-    get_parameters = request.args
+    message = ""
+    updated = False
+    post_parameters = request.form      
 
-    day_of_the_week = get_parameters.get("day_of_the_week")
-    
-    old_food_name = get_parameters.get("old_food_name")
-    old_food_price = get_parameters.get("old_food_price")
+    day_of_the_week = post_parameters.get("day_of_the_week")
+    old_food_name = post_parameters.get("old_food_name")
+    old_food_price = post_parameters.get("old_food_price")
 
-    new_food_name = get_parameters.get("new_food_name").strip()
-    new_food_price = get_parameters.get("new_food_price").strip()
+    new_food_name = post_parameters.get("new_food_name").strip()
+    new_food_price = post_parameters.get("new_food_price").strip()
 
     temp_food_dict = food_dict.get(day_of_the_week)
 
-    updated = False
-    message = ""
+    if old_food_name != "" and old_food_price != "":
+        if new_food_name != "" and new_food_price != "":
+            # Only accepts alphabets and spaces.
+            regex = r"^[A-Za-z ]*$"
+            regex_passed = re.match(regex, new_food_name)
+            
+            if regex_passed:
+                if new_food_name == old_food_name:
+                    try:
+                        old_food_price = float(old_food_price)
+                        new_food_price = float(new_food_price)
 
-    # New food name and new food price is not empty.
-    if new_food_name != "" and new_food_price != "":
-        # Only accepts alphabets and spaces.
-        regex = r"^[A-Za-z ]*$"
-        
-        # Regex passed.
-        if re.match(regex, new_food_name):
+                        if new_food_price == old_food_price:
+                            message += "New food name and prices are the same.<br>"
+                            message += "As such, no changes will be made."
+                            message = Markup(message)
 
-            # Change only Key values.
-            if new_food_name == old_food_name:
-                try:
-                    old_food_price = float(old_food_price)
-                    new_food_price = float(new_food_price)
+                        elif new_food_price > 0:
+                            # Key name remains the same, only values changed.
+                            temp_food_dict[old_food_name] = new_food_price
+                            food_dict[day_of_the_week] = temp_food_dict
+                            
+                            update_file(path_to_data, food_dict)
+                            updated = True
 
-                    if new_food_price == old_food_price:
-                        message += "New food name and prices are the same.<br>"
-                        message += "As such, no changes will be made."
-                        message = Markup(message)
+                        else:
+                            message += "New food price must not be lesser than 0."
 
-                    elif new_food_price > 0:
-                        # Key name remains the same, only values changed.
-                        temp_food_dict[old_food_name] = new_food_price
-                        food_dict[day_of_the_week] = temp_food_dict
-                        
-                        update_file(path_to_data, food_dict)
-                        updated = True
+                    except ValueError:
+                        message += "New food price must be in floating point format."
 
-                    else:
-                        message += "New food price must not be lesser than 0."
+                # If new food name is different from old food name.
+                else:
+                    try:
+                        # Check for duplicate.
+                        if new_food_name in temp_food_dict:
+                            message += f"There is already \"{new_food_name}\" in the existing menu."
 
-                except ValueError:
-                    message += "New food price must be in floating point format."
+                        else:
+                            new_food_price = float(new_food_price)
 
-            # If new food name is different from old food name.
+                            if new_food_price > 0:
+                                # Delete old food name, old price remains, key name changed.
+                                temp_food_dict[new_food_name] = temp_food_dict.pop(old_food_name) 
+
+                                # Update the changed key name with new price.
+                                temp_food_dict[new_food_name] = new_food_price 
+
+                                # Update global nested dictionary.
+                                food_dict[day_of_the_week] = temp_food_dict
+
+                                # Update data file with new changes from nested dictionary.
+                                update_file(path_to_data, food_dict)
+                                updated = True
+
+                            else:
+                                message += "New food price must not be lesser than 0."
+                    
+                    except ValueError:
+                        message += "New food price must be in floating point format."
+            
             else:
-                try:
-                    new_food_price = float(new_food_price)
+                message += "Only alphabets and spaces are accepted for New food"
 
-                    if new_food_price > 0:
-                        temp_food_dict[new_food_name] = temp_food_dict.pop(old_food_name)
-                        temp_food_dict[new_food_name] = new_food_price
-                        food_dict[day_of_the_week] = temp_food_dict
-
-                        update_file(path_to_data, food_dict)
-                        updated = True
-
-                    else:
-                        message += "New food price must not be lesser than 0."
-                
-                except ValueError:
-                    message += "New food price must be in floating point format."
-        
-        # Failed regex. 
         else:
-            message += "Only alphabets and spaces are accepted for New food"
+            message += "New food name and/or food price must not be empty."
 
-    # New food name and/or new food price is empty.
     else:
-        message += "New food name and/or food price must not be empty."
-
+        message += "Press Edit to populate Old Food Name and Old Food price."
+    
     food_menu_dict = food_dict.get(day_of_the_week)
 
     if updated:
@@ -153,53 +161,50 @@ def save_changes():
         return render_template('edit.html', food_menu_dict = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY, message = message)
 
 # 1st -> order_food.html
-@app.route('/order/form')    
+@app.route('/order/form')
 def form():
     refresh_data()
     return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY)
 
 # 2nd -> Form action submitted to /order/cart
-@app.route('/order/cart')  
+@app.route('/order/cart', methods = ['GET', 'POST'])  
 def order_food():
     global food_cart_dict
     global total_quantity_and_price_list
-    global order_raised
 
     food_cart_dict.clear()
     total_quantity_and_price_list.clear()
 
     order_number = randint(1, 500)
-    get_parameters = request.args
+
+    post_parameters = request.form
 
     total_price = 0
     total_quantity = 0
 
-    # Example of get_paramters:
-    # Chicken Congee : '' -> No value(Not selected by user).
-    # Chicken Rice : '1' -> Value exist but in string format.
-    for food_name in get_parameters:
+    for food_name in post_parameters:
         try:
-            food_quantity = int(get_parameters.get(food_name))
+            food_quantity = int(post_parameters.get(food_name))
 
             if food_quantity > 0:
                 food_price = food_menu_of_the_day_dict.get(food_name)
-                food_price *= food_quantity # Get the price of a particular food if a quantity is given.
+                food_price *= food_quantity
 
                 total_quantity += food_quantity
                 total_price += food_price
-                    
+
                 price_and_quantity_list = [food_price, food_quantity]
                 food_cart_dict[food_name] = price_and_quantity_list
         
-        # ValueError happens when quantity field is blank. Will do nothing and goes to the next loop.
+        # If quantity is empty. Conversion to int will fail. If that happens, do nothing.
         except ValueError:
-            pass           
+            pass
 
     total_quantity_and_price_list = [total_quantity, total_price]
 
     if len(food_cart_dict) > 0:
-        order_raised = True
         return redirect(url_for('cart', order_number = order_number))
+
     else:
         refresh_data()
         return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY)
@@ -207,57 +212,41 @@ def order_food():
 # 3rd -> Redirected to order number
 @app.route('/order/<order_number>') 
 def cart(order_number):
-    global order_raised
+    return render_template('cart.html', order_number = order_number, food_cart_dict = food_cart_dict, total_quantity_and_price_list = total_quantity_and_price_list)
 
-    if order_raised:
-        order_raised = False
-        return render_template('cart.html', order_number = order_number, food_cart_dict = food_cart_dict, total_quantity_and_price_list = total_quantity_and_price_list)
-    else:
-        return render_template('404.html')
-
-@app.route('/download')
+@app.route('/download', methods = ['GET', 'POST'])
 def download_file():
-    get_parameters = request.args
+    post_parameters = request.form
 
-    if len(get_parameters) > 0:
-    # Only interested in order number and nothing else.
-        for number in get_parameters:
-            order_number = number 
+    if len(post_parameters) > 0:
+        for filename in post_parameters:
+            file_to_be_downloaded = filename 
 
-        receipt = f"{order_number}.txt"
         path_to_download_folder = getcwd() + "\\download\\" 
         
-        return send_from_directory(path_to_download_folder, receipt, as_attachment = True)
+        return send_from_directory(path_to_download_folder, file_to_be_downloaded, as_attachment = True)
     
     else:
-        non_filtered_files = listdir(getcwd() + "\\download")
-        num_of_files = len(non_filtered_files)
+        files_in_directory = listdir(getcwd() + "\\download")
+        number_of_files = len(files_in_directory)
 
-        regex = r"\.txt"
+        return render_template('download.html', files_in_directory = files_in_directory, number_of_files = number_of_files)
 
-        filtered_files = list()
-        for file in non_filtered_files:
-            filtered_files.append(re.sub(regex, '', file))
-
-        return render_template('download.html', files = filtered_files, num_of_files = num_of_files)
-
-@app.route('/order/save')
+@app.route('/order/save', methods = ['GET', 'POST'])
 def save_order():
-    get_parameters = request.args
+    post_parameters = request.form
 
-    # Only interested in order number and nothing else.
-    for number in get_parameters:
-        order_number = number
+    # Only interested in order number.
+    for order in post_parameters:
+        order_number = order
 
-    path_to_receipt = f"/download/{order_number}.txt"
     print_receipt(order_number)
 
-    return render_template('order_saved.html', order_number = order_number, path_to_receipt = path_to_receipt)
+    return render_template('order_saved.html', order_number = order_number)
 
 def print_receipt(order_number):
-    # This if condition means that if there is an order, save the order to a file.
     if len(food_cart_dict) > 0 and len(total_quantity_and_price_list) > 0:
-        path_to_receipt = getcwd() + f"\\download\{order_number}.txt"
+        path_to_receipt = getcwd() + f"\\download\\{order_number}.txt"
 
         with open(path_to_receipt, 'w') as f:
             data = "Thank you for ordering from SPAM.\n"
@@ -303,26 +292,23 @@ def load_data_to_nested_dict():
             for food in data:
                 food_day, food_name, food_price = food.split(',')
 
-                # For Monday, only get food name and food price for monday
-                # For Tuesday, only get food name and food price for tuesday and so on.
                 if food_day == day_of_the_week:
                     food_name_and_price_dict[food_name] = float(food_price)
 
             temp_food_dict[day_of_the_week] = food_name_and_price_dict
 
         return temp_food_dict
+
     else:
         # Exit program if we are not able to read from our data file.
         print(f"Could not open -> {path_to_data}")
         sys.exit(1)
 
 def refresh_data():
-    # This function loads the latest data into both:
-    # 1. nested dictionary
-    # 2. menu of the day
     global food_dict
     global food_menu_of_the_day_dict
 
+    # To update the global nested dictionary and menu of the day data with new changes.
     food_dict = load_data_to_nested_dict()
     food_menu_of_the_day_dict = food_dict.get(CURRENT_DAY)
 
@@ -339,9 +325,8 @@ def update_file(filename, food_dict):
                 food_price = day_of_the_week_food_dict.get(food_name)
                 data += f'{day_of_the_week},{food_name},{food_price}\n'
 
-        # Removes extra newlines from previous execution.
         f.write(data.strip())
 
 if __name__ == '__main__':
     refresh_data()
-    app.run(debug = True)
+    app.run()

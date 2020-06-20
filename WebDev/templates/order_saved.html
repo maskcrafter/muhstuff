@@ -5,10 +5,10 @@
 {% block content %}
     <p>To download order #<b>{{ order_number }}</b>, click on the <b>Download File</b> button.</p>
     
-    <form method="get" action='/download'>
-        <input type='submit' name="{{ order_number }}" value="Download File">
+    <form method = "POST" action = '/download'>
+        <input type = 'submit' name = "{{ order_number }}.txt" value = "Download File">
     </form><hr>
 
-    <p>Alternative, you may choose to <a href = '/download'><b>CLICK HERE</b></a> to go to the downloads folder.</p>
-    <p>Click <a href = '/'><b>HERE</b></a> for the Main Menu.</p> 
+    <p>Alternative, you may choose to <a href = '/download'><b>CLICK HERE</b></a> to go to the Downloads Folder.</p>
+    <p>Click <a href = '/'>Back to Main Menu.</p> 
 {% endblock %}

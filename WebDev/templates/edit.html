@@ -26,15 +26,15 @@
         {% endfor %}
     </table><br>
 
-    <form action = "/admin/save" method = "get">
-        <table width = '300px' style = "text-align: center">
+    <form action = "/admin/save" method = "POST">
+        <table width = '500px' style = "text-align: center">
             <tr>
                 <td> 
                     <label for = "day_of_the_week_text_box">Day :</label>
                 </td>
 
                 <td>
-                    <input type = "text" name = "day_of_the_week" id = "day_of_the_week_text_box" readonly>
+                    <input type = "text" name = "day_of_the_week" id = "day_of_the_week_text_box" value = "{{ day_of_the_week }}" readonly>
                 </td>
             </tr>
 
@@ -86,7 +86,7 @@
         </table>
     </form>
 
-    {% if message | length%}
+    {% if message | length %}
         <p>{{ message }}</p>
     {% endif %}
 {% endblock %}
