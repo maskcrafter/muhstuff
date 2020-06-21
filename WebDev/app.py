@@ -26,7 +26,14 @@ app.secret_key = "password"
 
 @app.route('/')
 def login():
-    return render_template('login.html')
+    if 'is_admin' in session:
+        return redirect(url_for('home_admin'))
+    
+    elif 'username' in session and 'is_admin' not in session:
+        return redirect(url_for('home_user'))
+
+    else:
+        return render_template('login.html')
 
 @app.route('/logout', methods = ['GET', 'POST'])
 def logout():
@@ -39,67 +46,57 @@ def logout():
 
 @app.route('/authenticate', methods = ['GET', 'POST'])
 def authenticate():
-    post_parameters = request.form
-    
-    username = post_parameters.get("username").lower().strip()
-    password = post_parameters.get("password")
+    if request.method == 'POST':
+        post_parameters = request.form
+        
+        username = post_parameters.get("username").lower().strip()
+        password = post_parameters.get("password")
 
-    regex = r"^[a-z]*$"
-    passed_regex = re.match(regex, username)
+        regex = r"^[a-z]*$"
+        passed_regex = re.match(regex, username)
 
-    if passed_regex and username != "" and password != "":
-        hashed_password = md5(password.encode()).hexdigest()
+        if passed_regex and username != "" and password != "":
+            hashed_password = md5(password.encode()).hexdigest()
 
-        authentication_results = authenticate_user(username, hashed_password)
+            authentication_results = authenticate_user(username, hashed_password)
 
-        if len(authentication_results) > 0:
-            # [('admin', '21232f297a57a5a743894a0e4a801fc3', 'yes', '15')]
-            # Is a tuple contained in a list.
-            # list[0] -> authentication data   
-            authentication_results = authentication_results[0]     
+            if len(authentication_results) > 0:
+                # [('admin', '21232f297a57a5a743894a0e4a801fc3', 'yes', '15')]
+                # Is a tuple contained in a list.
+                # list[0] -> authentication data   
+                authentication_results = authentication_results[0]     
 
-            session['username'] = authentication_results[0]
-            session['discount'] = authentication_results[3]
+                session['username'] = authentication_results[0]
+                session['discount'] = authentication_results[3]
 
-            if authentication_results[2] == "yes":
-                session['is_admin'] = "yes"
+                if authentication_results[2] == "yes":
+                    session['is_admin'] = "yes"
 
-            if 'is_admin' in session:
-                return redirect(url_for('home_admin'))
+                if 'is_admin' in session:
+                    return redirect(url_for('home_admin'))
+
+                else:
+                    return redirect(url_for('home_user'))   
 
             else:
-                return redirect(url_for('home_user'))   
+                message = "Either username or password is wrong."
+
+                return render_template('login.html', message = message) 
 
         else:
-            message = "Either username or password is wrong."
-
+            message = "Username must contain only alphabets.<br>"
+            message += "Username and Password must not be empty.<br>"
+            message = Markup(message)
+            
             return render_template('login.html', message = message) 
-
+    
     else:
-        message = "Username must contain only alphabets.<br>"
-        message += "Username and Password must not be empty.<br>"
-        message = Markup(message)
-        
-        return render_template('login.html', message = message) 
+        return redirect(url_for('login'))
 
 @app.errorhandler(404)
 def page_not_found(error_code):
     # Error page.
     return render_template('404.html'), 404
-
-@app.route('/user')
-def home_user():
-    return render_template('index.html', weekdays = WEEKDAYS, current_day = CURRENT_DAY)
-
-@app.route('/user/view/<day_of_the_week>')
-def view(day_of_the_week):
-    food_menu_dict = food_dict.get(day_of_the_week)
-
-    # food_menu will be None if key(day_of_the_week) is non-existent.
-    if food_menu_dict: # True.
-        return render_template('data.html', food_menu_dict = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY)
-    else:
-        return render_template('404.html')
 
 @app.route('/admin')
 def home_admin():
@@ -123,8 +120,8 @@ def edit(day_of_the_week):
 
 @app.route('/admin/save', methods = ['GET', 'POST'])
 def save_changes():
-    if request.method == 'POST':
-        if 'is_admin' in session:
+    if 'is_admin' in session:
+        if request.method == 'POST':
             global food_dict
             global food_cart_dict
             global total_quantity_and_price_list
@@ -228,95 +225,137 @@ def save_changes():
             else:
                 return render_template('edit.html', food_menu_dict = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY, message = message)
 
+        # Method -> GET, redirect to admin home directory.
         else:
-            return redirect(url_for('login'))
+            return redirect(url_for('home_admin'))
 
     else:
-        return redirect(url_for('home_admin'))
+        return redirect(url_for('login'))
+
+@app.route('/user')
+def home_user():
+    if 'username' in session and 'is_admin' not in session:
+        return render_template('index.html', weekdays = WEEKDAYS, current_day = CURRENT_DAY, username = session['username'])
+    else:
+        return redirect(url_for('login'))
+
+@app.route('/user/view/<day_of_the_week>')
+def view(day_of_the_week):
+    if 'username' in session and 'is_admin' not in session:
+        food_menu_dict = food_dict.get(day_of_the_week)
+
+        # food_menu will be None if key(day_of_the_week) is non-existent.
+        if food_menu_dict: # True.
+            return render_template('data.html', food_menu_dict = food_menu_dict, day_of_the_week = day_of_the_week, current_day = CURRENT_DAY)
+        else:
+            return render_template('404.html')
+
+    else:
+        return redirect(url_for('login'))
 
 @app.route('/download', methods = ['GET', 'POST'])
 def download_file():
-    post_parameters = request.form
+    if 'username' in session and 'is_admin' not in session:
+        post_parameters = request.form
 
-    if len(post_parameters) > 0:
-        for filename in post_parameters:
-            file_to_be_downloaded = filename 
+        if len(post_parameters) > 0:
+            for filename in post_parameters:
+                file_to_be_downloaded = filename 
 
-        path_to_download_folder = getcwd() + "\\download\\" 
+            path_to_download_folder = getcwd() + "\\download\\" 
+            
+            return send_from_directory(path_to_download_folder, file_to_be_downloaded, as_attachment = True)
         
-        return send_from_directory(path_to_download_folder, file_to_be_downloaded, as_attachment = True)
+        else:
+            files_in_directory = listdir(getcwd() + "\\download")
+            number_of_files = len(files_in_directory)
+
+            return render_template('download.html', files_in_directory = files_in_directory, number_of_files = number_of_files)
     
     else:
-        files_in_directory = listdir(getcwd() + "\\download")
-        number_of_files = len(files_in_directory)
-
-        return render_template('download.html', files_in_directory = files_in_directory, number_of_files = number_of_files)
+        return redirect(url_for('login'))
 
 # 1st -> order_food.html
 @app.route('/order/form')
 def form():
-    refresh_data()
-    return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY)
+    if 'username' in session and 'is_admin' not in session:
+        refresh_data()
+        return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY)
+   
+    else:
+        return redirect(url_for('login'))
 
 # 2nd -> Form action submitted to /order/cart
 @app.route('/order/cart', methods = ['GET', 'POST'])  
 def order_food():
-    global food_cart_dict
-    global total_quantity_and_price_list
+    if 'username' in session and 'is_admin' not in session:
+        if request.method == 'POST':
+            global food_cart_dict
+            global total_quantity_and_price_list
 
-    food_cart_dict.clear()
-    total_quantity_and_price_list.clear()
+            food_cart_dict.clear()
+            total_quantity_and_price_list.clear()
 
-    order_number = randint(1, 500)
+            order_number = randint(1, 500)
 
-    post_parameters = request.form
+            post_parameters = request.form
 
-    total_price = 0
-    total_quantity = 0
+            total_price = 0
+            total_quantity = 0
 
-    for food_name in post_parameters:
-        try:
-            food_quantity = int(post_parameters.get(food_name))
+            for food_name in post_parameters:
+                try:
+                    food_quantity = int(post_parameters.get(food_name))
 
-            if food_quantity > 0:
-                food_price = food_menu_of_the_day_dict.get(food_name)
-                food_price *= food_quantity
+                    if food_quantity > 0:
+                        food_price = food_menu_of_the_day_dict.get(food_name)
+                        food_price *= food_quantity
 
-                total_quantity += food_quantity
-                total_price += food_price
+                        total_quantity += food_quantity
+                        total_price += food_price
 
-                price_and_quantity_list = [food_price, food_quantity]
-                food_cart_dict[food_name] = price_and_quantity_list
+                        price_and_quantity_list = [food_price, food_quantity]
+                        food_cart_dict[food_name] = price_and_quantity_list
+                
+                # If quantity is empty. Conversion to int will fail. If that happens, do nothing.
+                except ValueError:
+                    pass
+
+            total_quantity_and_price_list = [total_quantity, total_price]
+
+            if len(food_cart_dict) > 0:
+                return render_template('cart.html', order_number = order_number, food_cart_dict = food_cart_dict, total_quantity_and_price_list = total_quantity_and_price_list)
+
+            else: # Empty cart.
+                refresh_data()
+                return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY, message = "There are no items ordered.")
         
-        # If quantity is empty. Conversion to int will fail. If that happens, do nothing.
-        except ValueError:
-            pass
-
-    total_quantity_and_price_list = [total_quantity, total_price]
-
-    if len(food_cart_dict) > 0:
-        return redirect(url_for('cart', order_number = order_number))
-
+        # Method -> GET, redirect to home user directory.
+        else:
+            return redirect(url_for('home_user'))
+    
     else:
-        refresh_data()
-        return render_template('order_food.html', food_data = food_menu_of_the_day_dict, current_day = CURRENT_DAY)
-   
-# 3rd -> Redirected to order number
-@app.route('/order/<order_number>') 
-def cart(order_number):
-    return render_template('cart.html', order_number = order_number, food_cart_dict = food_cart_dict, total_quantity_and_price_list = total_quantity_and_price_list)
+        return redirect(url_for('login'))
 
 @app.route('/order/save', methods = ['GET', 'POST'])
 def save_order():
-    post_parameters = request.form
+    if 'username' in session and 'is_admin' not in session:
+        if request.method == 'POST':
+            post_parameters = request.form
 
-    # Only interested in order number.
-    for order in post_parameters:
-        order_number = order
+            # Only interested in order number.
+            for order in post_parameters:
+                order_number = order
 
-    print_receipt(order_number)
+            print_receipt(order_number)
 
-    return render_template('order_saved.html', order_number = order_number)
+            return render_template('order_saved.html', order_number = order_number)
+        
+        else:
+            return redirect(url_for('home_user'))
+
+    else:
+        return redirect(url_for('login'))
 
 def load_data_to_nested_dict():
     temp_food_dict = dict()

@@ -3,6 +3,7 @@
 
 {% block content %}
     <h3>Welcome to SPAM&trade;</h3>
+    <p>Welcome <i>{{ username }}</i>!</p>
 
     <table border="1px solid black" width='300px' style="text-align : center">
         <p>Food of the Day:</p>
@@ -28,6 +29,9 @@
                 </tr>
             {% endif %}
         {% endfor %}
-    
     </table>
+
+    <form action = "/logout" method = "POST">
+        <p><button type = "submit">Logout {{ username }}</button></p>
+    </form>
 {% endblock %}

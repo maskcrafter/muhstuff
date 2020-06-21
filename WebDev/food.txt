@@ -1,6 +1,6 @@
-Monday,Chicken Fried Rice,3.5
 Monday,Mamak Fried Rice,3.7
 Monday,Fried Noodle,5.0
+Monday,Chicken Rice,3.6
 Tuesday,Cheese Fries,3.5
 Tuesday,Royale Coleslaw,2.5
 Tuesday,Spaghetti Bolognaise,5.4

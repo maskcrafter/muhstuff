@@ -3,10 +3,10 @@
 
 {% block content %}
     <h3>Welcome to Admin Page</h3>
-    <p>Welcome {{ username }}!</p>
+    <p>Welcome <i>{{ username }}</i>!</p>
 
     <table border = "1px solid black" width = '300px' style = "text-align: center">
-        <p>Food Menu, Monday to Friday.</p>
+        <p>Click on any Day link to edit food for that particular Day.</p>
 
         {% for day_of_the_week in weekdays %}
             <tr>
@@ -15,9 +15,8 @@
                 </td>
             </tr>
         {% endfor %}
-    </table>
+    </table><br>
 
-    <br>
     <form action = "/logout" method = "POST">
         <p><button type = "submit">Logout {{ username }}</button></p>
     </form>

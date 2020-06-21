@@ -13,12 +13,12 @@
             </tr>
 
             {% for food_name in food_data %}
-            <tr>
-                <td><p><b>{{ loop.index }}</b></p></td>
-                <td>{{ food_name }}</td>
-                <td>${{ "%.2f"|format(food_data[food_name]) }}</td>
-                <td><input type = "number" name = '{{ food_name }}' min = "0" max = "10" value = "0"></td>
-            </tr>
+                <tr>
+                    <td><p><b>{{ loop.index }}</b></p></td>
+                    <td>{{ food_name }}</td>
+                    <td>${{ "%.2f"|format(food_data[food_name]) }}</td>
+                    <td><input type = "number" name = '{{ food_name }}' min = "0" max = "10" value = "0"></td>
+                </tr>
             {% endfor %}
         </table>
 
@@ -26,6 +26,10 @@
         <input type = "submit" value = "Order Food">
         <br>
     </form>
+
+    {% if message | length %}
+        <script>alert("{{ message }}");</script>
+    {% endif %}
 
     <br>
     <a href = "/user">Back to Main Menu</a>
