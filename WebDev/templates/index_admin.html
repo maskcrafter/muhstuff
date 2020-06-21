@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %} Admin Page {% endblock %}
+
+{% block content %}
+    <h3>Welcome to Admin Page</h3>
+    <p>Welcome {{ username }}!</p>
+
+    <table border = "1px solid black" width = '300px' style = "text-align: center">
+        <p>Food Menu, Monday to Friday.</p>
+
+        {% for day_of_the_week in weekdays %}
+            <tr>
+                <td>
+                    <p><a href = '/admin/edit/{{ day_of_the_week }}'>{{ day_of_the_week }}</a></p>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <form action = "/logout" method = "POST">
+        <p><button type = "submit">Logout {{ username }}</button></p>
+    </form>
+{% endblock %}

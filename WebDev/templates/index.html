@@ -5,10 +5,10 @@
     <h3>Welcome to SPAM&trade;</h3>
 
     <table border="1px solid black" width='300px' style="text-align : center">
-        <p>Food of the day:</p>
+        <p>Food of the Day:</p>
         <tr>
             <td>
-                <p><a href='/view/{{ current_day }}'>{{ current_day }}</a></p>
+                <p><a href='/user/view/{{ current_day }}'>{{ current_day }}</a></p>
                 <p><a href='/order/form'>Click Here</a> to order food.</p>
             </td>
         </tr>
@@ -23,7 +23,7 @@
             {% if day_of_the_week != current_day %}
                 <tr>
                     <td>
-                        <p><a href = '/view/{{ day_of_the_week }}'>{{ day_of_the_week }}</a></p>
+                        <p><a href = '/user/view/{{ day_of_the_week }}'>{{ day_of_the_week }}</a></p>
                     </td>
                 </tr>
             {% endif %}
