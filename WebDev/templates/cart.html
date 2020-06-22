@@ -4,7 +4,7 @@
 {% block content %}
     <p><b>Order</b>: #<u>{{ order_number }}</u></p><hr>
 
-    <p>Please remember to save this page via the save button or print this page.</p>
+    <p>Please remember to print or save this page via the save button.</p>
 
     <table border = "1px solid black" width = '600px' style = "text-align : center">
         <tr>
@@ -25,18 +25,32 @@
             </tr>
         {% endfor %}
         
+        <!-- total_quantity_and_price_list = [total_quantity, discount_rate, discount_price, gross_price, net_price] -->
         {% set total_quantity = total_quantity_and_price_list[0] %}
-        {% set total_price = total_quantity_and_price_list[1] %}
-        
+        {% set discount_rate = total_quantity_and_price_list[1] %}
+        {% set discount_price = total_quantity_and_price_list[2] %}
+        {% set gross_price = total_quantity_and_price_list[3] %}
+        {% set net_price = total_quantity_and_price_list[4] %}
+
         <tr>
-            <td><p><u>Total</u></p></td>
-            <td>x {{ total_quantity }}</td>
-            <td>$<u>{{ "%.2f"|format(total_price) }}</u></td>
+            <td><p><i>Gross Price</i></p></td>
+            <td rowspan="3">x {{ total_quantity }}</td>
+            <td>${{ "%.2f" | format(gross_price) }}</td>
+        </tr>
+
+        <tr>
+            <td><p><i>Discount Rate {{ discount_rate }}%</i></p></td>
+            <td>${{ "%.2f" | format(discount_price) }}</td>
+        </tr>
+
+        <tr>
+            <td><p><i>Net Price</i></p></td>
+            <td>${{ "%.2f" | format(net_price) }}</td>
         </tr>
     </table>
     <br><hr>
 
-    <p>Thank you for ordering from SPAM.<br>Please pay a total of $<u>{{ "%.2f"|format(total_price) }}</u></p>
+    <p>Thank you for ordering from SPAM.<br>Please pay a total of $<u>{{ "%.2f" | format(net_price) }}</u></p>
 
     <form action = "/order/save" method = "POST">
         <input type = 'submit' name = "{{ order_number }}" value = "Save Order #{{ order_number }}">

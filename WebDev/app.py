@@ -67,7 +67,7 @@ def authenticate():
                 authentication_results = authentication_results[0]     
 
                 session['username'] = authentication_results[0]
-                session['discount'] = authentication_results[3]
+                session['discount'] = float(authentication_results[3])
 
                 if authentication_results[2] == "yes":
                     session['is_admin'] = "yes"
@@ -321,7 +321,12 @@ def order_food():
                 except ValueError:
                     pass
 
-            total_quantity_and_price_list = [total_quantity, total_price]
+            discount_rate = session['discount']
+            discount_price = total_price * (discount_rate / 100.0)
+            gross_price = total_price
+            net_price = gross_price - discount_price
+
+            total_quantity_and_price_list = [total_quantity, discount_rate, discount_price, gross_price, net_price]
 
             if len(food_cart_dict) > 0:
                 return render_template('cart.html', order_number = order_number, food_cart_dict = food_cart_dict, total_quantity_and_price_list = total_quantity_and_price_list)
@@ -420,15 +425,28 @@ def print_receipt(order_number):
                 food_name_and_quantity = f"{food_name} X {food_quantity}"
                 data += f"\n{count}. {food_name_and_quantity.ljust(50)} ${food_price:.2f}"
 
-            total_price = total_quantity_and_price_list[1]
-            total_price = f"${total_price:.2f}".rjust(55)
+            # total_quantity_and_price_list = [total_quantity, discount_rate, discount_price, gross_price, net_price]
+            gross_price = total_quantity_and_price_list[3]
+            gross_price = f"${gross_price:.2f}".rjust(48)
+
+            discount_rate = total_quantity_and_price_list[1]
+
+            discount_price = total_quantity_and_price_list[2]
+            discount_price = f"${discount_price:.2f}".rjust(47)
+
+            net_price = total_quantity_and_price_list[4]
+            net_price = f"${net_price:.2f}".rjust(50)
+
+            price_to_pay = total_quantity_and_price_list[4]
 
             data += "\n"
             data += "=" * 64
-            data += f"\nTotal{total_price}\n"
+            data += f"\nGross Price {gross_price}"
+            data += f"\nDiscount {int(discount_rate)}% {discount_price}"
+            data += f"\nNet Price {net_price}\n"
             data += "=" * 64
             data += "\n\nPlease present this receipt at the counter.\n"
-            data += f"Total amount payable -> {total_price.strip()}"
+            data += f"Total amount payable -> ${price_to_pay:.2f}"
 
             f.write(data)    
 
