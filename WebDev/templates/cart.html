@@ -21,7 +21,7 @@
             <tr>
                 <td><p>{{ food_name }}</p></td>
                 <td>x {{ food_quantity }}</td>
-                <td>${{ "%.2f"|format(food_price) }}</td>
+                <td>${{ "%.2f" | format(food_price) }}</td>
             </tr>
         {% endfor %}
         
@@ -34,7 +34,7 @@
 
         <tr>
             <td><p><i>Gross Price</i></p></td>
-            <td rowspan="3">x {{ total_quantity }}</td>
+            <td rowspan = "3">x {{ total_quantity }}</td>
             <td>${{ "%.2f" | format(gross_price) }}</td>
         </tr>
 
