@@ -406,7 +406,7 @@ def update_file(filename, food_dict):
         f.write(data.strip())
 
 def print_receipt(order_number):
-    if len(food_cart_dict) > 0 and len(total_quantity_and_price_list) > 0:
+    if len(food_cart_dict) > 0:
         path_to_receipt = getcwd() + f"\\download\\{order_number}.txt"
 
         with open(path_to_receipt, 'w') as f:
