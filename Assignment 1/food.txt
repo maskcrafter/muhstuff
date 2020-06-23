@@ -1,4 +1,4 @@
-Monday,Chicken Fried Rice,3.5
+Monday,Chicken Fried Rice,3.6
 Monday,Fried Noodles,3.5
 Monday,Fried Hokkien Noodle,3.6
 Tuesday,Fish and Chips,5.5

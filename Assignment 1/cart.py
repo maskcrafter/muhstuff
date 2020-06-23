@@ -137,6 +137,7 @@ def specify_quantity(ordered_food_name, ordered_food_price):
         except ValueError:
             print("\n\tQuantity must be in digits.")
             print("\n\tAdditionally, check min|max digits.")
+            short_pause()
 
     else:
         print("\n\tQuantity must be in digits.")
@@ -277,6 +278,103 @@ def print_receipt(filename, discount):
         print("\n\tCart is empty. There is nothing to be printed.")
         pause()
 
+def modify_quantity(chosen_food):
+    clear_screen()
+    print_header("\tModify Quantity")
+
+    price_and_quantity_list = food_data.food_cart_dict.get(chosen_food)
+    old_quantity = price_and_quantity_list[1]
+
+    print(f"\tOld quantity -> {old_quantity}")
+
+    instructions = "\n\tOnly digits are accepted."
+    instructions += "\n\tMin digits - 1, Max digits - 2 ."
+    instructions += "\n\n\tQuantity -> "
+
+    regex = r"^\d{1,2}$"
+    new_quantity = input(instructions).strip()
+    regex_passed = re.match(regex, new_quantity)
+
+    if regex_passed:
+        try:
+            new_quantity = int(new_quantity)
+
+            if new_quantity == 0:
+                food_data.food_cart_dict.pop(chosen_food)
+                
+                print(f"\n\tYou removed {chosen_food} from the cart.")
+                pause()
+
+            elif new_quantity < 0:
+                print("\n\tNegative values are not accepted.")
+                short_pause()
+
+            else:
+                price_and_quantity_list[1] = new_quantity
+                food_data.food_cart_dict[chosen_food] = price_and_quantity_list
+
+                print(f"\n\tUpdated quantity to X {new_quantity}.")
+                pause()
+        
+        except ValueError:
+            print("\n\tOnly digits are accepted.")
+            short_pause()
+
+    else:
+        print("\n\tQuantity must be in digits.")
+        print("\n\tAdditionally, check min|max digits.")
+        short_pause()       
+
+def modify_cart():
+    while True:
+        upper_bound = len(food_data.food_cart_dict)
+
+        if upper_bound > 0:
+            clear_screen()
+            print_header("\tModify Cart")
+
+            for count, food_name in enumerate(food_data.food_cart_dict, 1):
+                price_and_quantity_list = food_data.food_cart_dict.get(food_name)
+
+                # Format of food_cart -> Chicken Rice : [2.50(price), 5(quantity)]
+                food_price = price_and_quantity_list[0]
+                food_quantity = price_and_quantity_list[1]
+
+                food_name_and_quantity = f"{food_name} X {food_quantity}"
+                food_price = f"${food_price:.2f}"
+
+                print(f"\t{count}. {food_name_and_quantity.ljust(50)} {food_price}")
+
+            instructions = "\n\tEnter \"0\" to exit."
+            instructions += "\n\tOnly digits are accepted."
+            instructions += "\n\n\tOption -> "
+
+
+            try:
+                option = int(input(instructions).strip())
+
+                if option == 0:
+                    break
+
+                elif option < 1 or option > upper_bound:
+                    print(f"\n\tFood chosen must be between 1 to {upper_bound}.")
+                    short_pause()
+
+                else:
+                    for count, food_name in enumerate(food_data.food_cart_dict, 1):
+                        if option == 1:
+                            chosen_food = food_name
+                            break
+
+                    modify_quantity(chosen_food)
+
+            except ValueError:
+                print("\n\tOnly digits are accepted.")
+                short_pause()
+
+        else:
+            return "empty"
+
 def list_order(discount):
     while True:
         clear_screen()
@@ -319,39 +417,37 @@ def list_order(discount):
 
             print_header(f"{footer}")
 
-            instructions = "\n\tOnly 'q', 's', 'e' are accepted."
+            instructions = "\n\tOnly 'q', 'm', 's', 'e' are accepted."
             instructions += "\n\n\tEnter \"q\" to go back to the main menu."
+            instructions += "\n\tEnter \"m\" to modify cart."
             instructions += "\n\tEnter \"s\" to print out receipt."
             instructions += "\n\tEnter \"e\" to empty cart."
             instructions += "\n\n\tOption -> "
 
             option = input(instructions).lower().strip()
-            regex = r"^\w{1}$"  # Accepts only 1 char.
-            regex_passed = re.match(regex, option)
+           
+            if option == 'q':
+                break
 
-            if regex_passed:
-                if option == 'q':
+            elif option == 's':
+                print_receipt(receipt_file_path, discount)
+                print("\n\tSave successful.")
+                pause()
+                break
+
+            elif option == 'm':
+                if modify_cart() == "empty":
                     break
 
-                elif option == 's':
-                    print_receipt(receipt_file_path, discount)
-                    print("\n\tSave successful.")
-                    pause()
-                    break
-
-                elif option == 'e':
-                    food_data.food_cart_dict.clear()
-                    clear_screen()
-                    print("\tEmptied food cart.")
-                    pause()
-                    break
+            elif option == 'e':
+                food_data.food_cart_dict.clear()
+                clear_screen()
+                print("\tEmptied food cart.")
+                pause()
+                break
             
-                else:
-                    print("\n\tInvalid option.")
-                    short_pause()
-
             else:
-                print("\n\tOnly 'q', 's', 'e' are accepted.")
+                print("\n\tOnly 'q', 'm', 's', 'e' are accepted.")
                 short_pause()
             
         else:
@@ -459,16 +555,21 @@ def update_food_price(selected_day, selected_day_food_dict, selected_food_name):
 
         new_price = float(input(instructions).strip())
 
-        selected_day_food_dict[selected_food_name] = new_price
-        food_data.food_dict[selected_day] = selected_day_food_dict
-        food_data.food_cart_dict.clear()
+        if new_price > 0:
+            selected_day_food_dict[selected_food_name] = new_price
+            food_data.food_dict[selected_day] = selected_day_food_dict
+            food_data.food_cart_dict.clear()
 
-        spam.convert_nested_dict_into_data_and_store_it_in_file(food_file, food_data.food_dict)
+            spam.convert_nested_dict_into_data_and_store_it_in_file(food_file, food_data.food_dict)
 
-        print(f"\n\tUpdated price from ${old_price:.2f} to ${new_price:.2f} .")
-        pause()
+            print(f"\n\tUpdated price from ${old_price:.2f} to ${new_price:.2f} .")
+            pause()
 
-        return "updated"
+            return "updated"
+        
+        else:
+            print("\n\tNew price must not be zero or negative.")
+            short_pause()
 
     except ValueError:
         print("\n\tOnly accepts floating point numbers.")
@@ -822,6 +923,19 @@ def login_menu():
             print(f"Error -> {error}")
             short_pause()
 
+def cover():
+    message = "After this, there is no turning back.\n"
+    message += "You take the blue pill—the story ends, you wake up in your bed and believe whatever you want to believe.\n"
+    message += "You take the red pill—you stay in Wonderland, and I show you how deep the rabbit hole goes.\n"
+    message += "        ....P7358646.....       \n"
+    
+    for index in range(len(message)):
+        clear_screen()
+        print(message[0:index])
+        sleep(0.05)
+
+    short_pause()
+    
 # For Data() Class
 food_dict = dict()
 food_cart_dict = dict()
@@ -844,4 +958,5 @@ food_data = Food(food_dict, food_cart_dict, food_of_the_day_dict, search_hits_di
 food_data.food_dict = spam.load_data_to_nested_dict(spam.load_data_from_file())
 food_data.food_of_the_day_dict = spam.get_todays_menu(food_data.food_dict)
 
+cover()
 login_menu()
