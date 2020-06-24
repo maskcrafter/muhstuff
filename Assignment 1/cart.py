@@ -756,7 +756,9 @@ def add_food(selected_day):
                 short_pause()
         
         else:
-            print("\n\tDuplicate item found or new food name is empty.")
+            print("\n\tPlease recheck input.")
+            print("\tIt may be a duplicate OR")
+            print("\tFood name doesn't contain alphabets.")
             short_pause()
 
 def add_delete_edit_menu(selected_day, selected_day_food_dict):
@@ -788,6 +790,10 @@ def add_delete_edit_menu(selected_day, selected_day_food_dict):
 
                 if return_code == "break":
                     break
+
+            else:
+                print("\n\tInvalid option.")
+                short_pause()
 
         except ValueError:
             print("\n\tOnly digits are accepted.")
@@ -988,5 +994,5 @@ food_data = Food(food_dict, food_cart_dict, food_of_the_day_dict, search_hits_di
 food_data.food_dict = spam.load_data_to_nested_dict(spam.load_data_from_file())
 food_data.food_of_the_day_dict = spam.get_todays_menu(food_data.food_dict)
 
-cover()
+#cover()
 login_menu()
