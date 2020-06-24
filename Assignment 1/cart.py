@@ -107,41 +107,33 @@ def specify_quantity(ordered_food_name, ordered_food_price):
     instructions += "\n\tMin digits - 1, Max digits - 2 ."
     instructions += "\n\n\tQuantity -> "
 
-    order_quantity = input(instructions).strip()
+    try:
+        order_quantity = int(input(instructions).strip())
 
-    # Only accepts digits.
-    regex = r"^\d{1,2}$"
-    passed_regex = re.match(regex, order_quantity)
+        if order_quantity == 0:
+            print(f"\n\tYou have cancelled ordering {ordered_food_name}.")
+            short_pause()
+            return "break"
 
-    if passed_regex:
-        order_quantity = int(order_quantity)
-
-        try:
-            if order_quantity == 0:
-                print(f"\n\tYou have cancelled ordering {ordered_food_name}.")
-                short_pause()
-                return "break"
-
-            elif order_quantity < 0:
-                print("\n\tNegative values are not accepted.")
-                short_pause()
-
-            else:
-                price_and_quantity_list = [ordered_food_price, order_quantity]
-                food_data.food_cart_dict[ordered_food_name] = price_and_quantity_list
-
-                print(f"\n\tSuccessfully added {ordered_food_name} X {order_quantity} to the cart.")
-                pause()
-                return "break"
-
-        except ValueError:
-            print("\n\tQuantity must be in digits.")
-            print("\n\tAdditionally, check min|max digits.")
+        elif order_quantity < 0:
+            print("\n\tNegative values are not accepted.")
             short_pause()
 
-    else:
+        elif order_quantity > 20:
+            print("\n\tExcessive quantity are not accepted.")
+            short_pause()
+
+        else:
+            price_and_quantity_list = [ordered_food_price, order_quantity]
+            food_data.food_cart_dict[ordered_food_name] = price_and_quantity_list
+
+            print(f"\n\tSuccessfully added {ordered_food_name} X {order_quantity} to the cart.")
+            pause()
+            return "break"
+
+    except ValueError:
         print("\n\tQuantity must be in digits.")
-        print("\tAdditionally check min|max digits.")
+        print("\n\tAdditionally, check min|max digits.")
         short_pause()
 
 def order_food():
@@ -291,39 +283,33 @@ def modify_quantity(chosen_food):
     instructions += "\n\tMin digits - 1, Max digits - 2 ."
     instructions += "\n\n\tQuantity -> "
 
-    regex = r"^\d{1,2}$"
-    new_quantity = input(instructions).strip()
-    regex_passed = re.match(regex, new_quantity)
+    try:
+        new_quantity = int(input(instructions).strip())
 
-    if regex_passed:
-        try:
-            new_quantity = int(new_quantity)
+        if new_quantity == 0:
+            food_data.food_cart_dict.pop(chosen_food)
+            
+            print(f"\n\tYou removed {chosen_food} from the cart.")
+            pause()
 
-            if new_quantity == 0:
-                food_data.food_cart_dict.pop(chosen_food)
-                
-                print(f"\n\tYou removed {chosen_food} from the cart.")
-                pause()
-
-            elif new_quantity < 0:
-                print("\n\tNegative values are not accepted.")
-                short_pause()
-
-            else:
-                price_and_quantity_list[1] = new_quantity
-                food_data.food_cart_dict[chosen_food] = price_and_quantity_list
-
-                print(f"\n\tUpdated quantity to X {new_quantity}.")
-                pause()
-        
-        except ValueError:
-            print("\n\tOnly digits are accepted.")
+        elif new_quantity < 0:
+            print("\n\tNegative values are not accepted.")
             short_pause()
 
-    else:
-        print("\n\tQuantity must be in digits.")
-        print("\n\tAdditionally, check min|max digits.")
-        short_pause()       
+        elif new_quantity > 20:
+            print("\n\tExcessive quantity are not accepted.")
+            short_pause()
+
+        else:
+            price_and_quantity_list[1] = new_quantity
+            food_data.food_cart_dict[chosen_food] = price_and_quantity_list
+
+            print(f"\n\tUpdated quantity to X {new_quantity}.")
+            pause()
+    
+    except ValueError:
+        print("\n\tOnly digits are accepted.")
+        short_pause()  
 
 def modify_cart():
     while True:
@@ -349,7 +335,6 @@ def modify_cart():
             instructions += "\n\tOnly digits are accepted."
             instructions += "\n\n\tOption -> "
 
-
             try:
                 option = int(input(instructions).strip())
 
@@ -374,6 +359,41 @@ def modify_cart():
 
         else:
             return "empty"
+
+def make_payment(amount_to_pay):
+    while True:
+        clear_screen()
+        print_header("\tPayment")
+
+        print(f"\tAmount to pay -> ${amount_to_pay:.2f}")
+
+        instructions = "\n\tOnly digits(floating points) are accepted."
+        instructions += "\n\tEnter \"0\" to cancel payment."
+        instructions += "\n\tPlease enter amount to pay -> $"
+
+        try:
+            amount_from_customer = float(input(instructions).strip())
+
+            if amount_from_customer == 0:
+                print("\n\tYou have chosen to cancel payment.")
+                short_pause()
+                break
+
+            elif amount_from_customer < amount_to_pay:
+                print("\n\tPlease provide exact amount or more.")
+                short_pause()
+
+            else:
+                customers_change = amount_from_customer - amount_to_pay
+                print(f"\n\tChange -> ${customers_change:.2f}")
+                print("\n\tThank you for supporting SPAM!")
+                pause()
+
+                return "payment made"
+
+        except ValueError:
+            print("\n\tOnly digits(floating points) are accepted.")
+            short_pause()
 
 def list_order(discount):
     while True:
@@ -403,6 +423,8 @@ def list_order(discount):
             discounted_price = total_price * (discount / 100.0)
             net_total_price = total_price - discounted_price
 
+            amount_to_pay = net_total_price
+
             footer = f"\tGross Total: {gross_total_price}"
 
             discounted_price = str(f"{discounted_price:.2f}")
@@ -417,11 +439,12 @@ def list_order(discount):
 
             print_header(f"{footer}")
 
-            instructions = "\n\tOnly 'q', 'm', 's', 'e' are accepted."
+            instructions = "\n\tOnly 'q', 'm', 's', 'e', 'p' are accepted."
             instructions += "\n\n\tEnter \"q\" to go back to the main menu."
             instructions += "\n\tEnter \"m\" to modify cart."
             instructions += "\n\tEnter \"s\" to print out receipt."
             instructions += "\n\tEnter \"e\" to empty cart."
+            instructions += "\n\tEnter \"p\" to make payment."
             instructions += "\n\n\tOption -> "
 
             option = input(instructions).lower().strip()
@@ -431,7 +454,11 @@ def list_order(discount):
 
             elif option == 's':
                 print_receipt(receipt_file_path, discount)
+
                 print("\n\tSave successful.")
+                print("\n\tPlease proceed to the counter with the receipt in hand.")
+                food_data.food_cart_dict.clear()
+
                 pause()
                 break
 
@@ -445,9 +472,14 @@ def list_order(discount):
                 print("\tEmptied food cart.")
                 pause()
                 break
+
+            elif option == 'p':
+                if make_payment(amount_to_pay) == "payment made":
+                    food_data.food_cart_dict.clear()
+                    break
             
             else:
-                print("\n\tOnly 'q', 'm', 's', 'e' are accepted.")
+                print("\n\tOnly 'q', 'm', 's', 'e', 'p' are accepted.")
                 short_pause()
             
         else:
@@ -924,10 +956,8 @@ def login_menu():
             short_pause()
 
 def cover():
-    message = "After this, there is no turning back.\n"
-    message += "You take the blue pill—the story ends, you wake up in your bed and believe whatever you want to believe.\n"
-    message += "You take the red pill—you stay in Wonderland, and I show you how deep the rabbit hole goes.\n"
-    message += "        ....P7358646.....       \n"
+    message = "        I am a hacker, enter my world...\n"
+    message += "    Mine is a world that begins with school...\n"
     
     for index in range(len(message)):
         clear_screen()

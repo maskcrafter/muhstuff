@@ -1,15 +1,15 @@
 Thank you for ordering from SPAM.
-Order number: #245
+Order number: #274
 
 ================================================================
 Your order
 ================================================================
-1. Fish and Chips X 10                                $55.00
+1. Asam Laksa X 10                                    $49.00
 ================================================================
-Gross Total:                                          $55.00
-Less 10% Discount:                                    $5.50
-Net total:                                            $49.50
+Gross Total:                                          $49.00
+Less 10% Discount:                                    $4.90
+Net total:                                            $44.10
 ================================================================
 
 Please present this receipt at the counter.
-Total amount payable -> $49.50
+Total amount payable -> $44.10
