@@ -1068,14 +1068,25 @@ def login_menu():
             short_pause()
 
 def cover():
-    message = "        I am a hacker, enter my world...\n"
-    message += "    Mine is a world that begins with school...\n"
+    clear_screen()
     
-    for index in range(len(message)):
-        clear_screen()
-        print(message[0:index])
-        sleep(0.05)
+    message = "        I am the bone of my sword....\n"
+    message += "    Steel is my body and fire is my blood...\n"
+    message += "        I have created a thousand codes...\n"
+    message += "            Unknown to Death...\n"
+    message += "            Nor known to life....\n"
+    message += "        Have withstood pain to create many programs...\n"
+    message += "   Yet this hands will never hold Anything....\n"
+    message += "           So, as i Pray........\n"
+    message += "          UnLimiTeD C0deW0rks!!\n"
+    message += "              ~~ P7358646 ~~\n"
 
+    for letter in message:
+        sys.stdout.write(letter)
+        sys.stdout.flush()
+        sleep(0.05)
+    
+    print()
     short_pause()
     
 # For Data() Class
