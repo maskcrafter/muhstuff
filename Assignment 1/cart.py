@@ -1096,5 +1096,5 @@ food_data = Food(food_dict, food_cart_dict, food_of_the_day_dict, search_hits_di
 food_data.food_dict = spam.load_data_to_nested_dict(spam.load_data_from_file())
 food_data.food_of_the_day_dict = spam.get_todays_menu(food_data.food_dict)
 
-#cover()
+cover()
 login_menu()
