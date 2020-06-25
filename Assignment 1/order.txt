@@ -1,15 +1,16 @@
 Thank you for ordering from SPAM.
-Order number: #274
+Order number: #163
 
 ================================================================
 Your order
 ================================================================
-1. Asam Laksa X 10                                    $49.00
+1. Chicken Murtabak X 10                              $70.00
+2. Mutton Murtabak X 10                               $65.00
 ================================================================
-Gross Total:                                          $49.00
-Less 10% Discount:                                    $4.90
-Net total:                                            $44.10
+Gross Total:                                         $135.00
+Less 5% Discount:                                    $6.75
+Net total:                                           $128.25
 ================================================================
 
 Please present this receipt at the counter.
-Total amount payable -> $44.10
+Total amount payable -> $128.25

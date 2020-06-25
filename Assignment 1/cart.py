@@ -8,6 +8,7 @@ from calendar import day_name
 from datetime import date
 from random import randint
 from hashlib import md5
+from subprocess import Popen
 
 # Class for manipulation of food data.
 class Data:
@@ -265,6 +266,9 @@ def print_receipt(filename, discount):
             data += f"Total amount payable -> ${price_to_be_paid:.2f}"
 
             f.write(data)
+
+            # Opens notepad and the written file.
+            Popen(["notepad.exe", filename])
 
     else:
         print("\n\tCart is empty. There is nothing to be printed.")
@@ -895,6 +899,99 @@ def authenticate_user(username, password):
         print("\n\tUnable to find DB file.")
         sys.exit(1)
 
+def create_user(username, password, is_admin, discount):
+    db_file_exist = path.exists(db_file)
+
+    if db_file_exist:
+        '''
+        CREATE TABLE [credentials] (
+                [user_id] integer primary key,
+                [username] text not null unique,
+                [password] text not null,
+                [is_admin] text not null,
+                [discount] text not null
+        );
+        '''
+        sqlite_connection = sqlite3.connect(db_file)
+        cursor = sqlite_connection.cursor()
+
+        query = f"INSERT INTO credentials (username, password, is_admin, discount) VALUES (\"{username}\", \"{password}\", \"{is_admin}\", \"{discount}\")"
+
+        try: 
+            cursor.execute(query)
+            sqlite_connection.commit()
+            return "ok"
+        
+        except sqlite3.Error:
+            return "not ok"
+
+        finally:
+            if sqlite_connection:
+                sqlite_connection.close()
+           
+def register():
+    while True:
+        clear_screen()
+        print_header("\tRegister new user.")
+
+        instructions = "\tFor username, only alphabets are accepted."
+        instructions += "\n\n\tFor passwords:"
+        instructions += "\n\tAt least 1 uppercase, 1 lowercase, 1 number and 1 special character."
+        instructions += "\n\tLeading and Trailing whitespaces for passwords will be removed."
+
+        print(instructions)
+
+        new_username = input("\n\tEnter new username -> ").lower().strip()
+
+        regex = r"^[A-Za-z]+$"
+        username_regex_passed = re.match(regex, new_username)
+
+        if username_regex_passed:
+            new_password = input("\tEnter new password -> ").strip()
+
+            lower_regex = re.compile(r'[a-z]+')
+            upper_regex = re.compile(r'[A-Z]+')
+            digit_regex = re.compile(r'[0-9]+')
+            special_char_regex = re.compile(r'\W+')
+
+            if len(new_password) < 8:
+                print("\n\tPassword must contain at least 8 characters.")
+                short_pause()
+
+            elif lower_regex.findall(new_password) == []:
+                print("\n\tPassword must contain at least one lowercase character.")
+                short_pause()
+
+            elif upper_regex.findall(new_password) == []:
+                print("\n\tPassword must contain at least one upper.")
+                short_pause()
+
+            elif digit_regex.findall(new_password) == []:
+                print("\n\tPassword must contain at least one digit.")
+                short_pause()
+
+            elif special_char_regex.findall(new_password) == []:
+                print("\n\tPassword must contain at least one special char.")
+                short_pause()
+
+            else:
+                hashed_password = md5(new_password.encode()).hexdigest()
+                return_code = create_user(new_username, hashed_password, "no", "5")
+
+                if return_code == "ok":
+                    print(f"\n\tUser {new_username} created!")
+                    pause()
+                    break
+
+                else:
+                    print(f"\n\tThere is an existing user. Unable to create account.")
+                    print("\tPlease choose a unique username.")
+                    pause()
+
+        else:
+            print("\n\tUsername regex failed.")
+            short_pause()
+
 def login_menu():
     while True:
         clear_screen()
@@ -902,6 +999,7 @@ def login_menu():
 
         instructions = "\tFor username, only alphabets are accepted."
         instructions += "\n\tAbove rule does not apply for password."
+        instructions += "\n\n\tEnter \"register\" to register new user."
         instructions += "\n\tPress \"CTRL+C\" to exit."
 
         print(instructions)
@@ -909,48 +1007,52 @@ def login_menu():
         try:
             username = input("\n\tUsername -> ").lower().strip()
             
-            regex = r"^[A-Za-z]*$"
-            passed_regex = re.match(regex, username)
+            if username == "register":
+                register()
+            
+            else:
+                regex = r"^[A-Za-z]*$"
+                passed_regex = re.match(regex, username)
 
-            if passed_regex and username != "":
-                password = input("\tPassword -> ")
+                if passed_regex and username != "":                
+                    password = input("\tPassword -> ")
 
-                if password != "":
-                    hashed_password = md5(password.encode()).hexdigest()
+                    if password != "":
+                        hashed_password = md5(password.encode()).hexdigest()
 
-                    authentication_results = authenticate_user(username, hashed_password)
+                        authentication_results = authenticate_user(username, hashed_password)
 
-                    if len(authentication_results) > 0:
-                        # [('admin', '21232f297a57a5a743894a0e4a801fc3', 'yes', '15')]
-                        # Is a tuple contained in a list.
-                        # list[0] -> authentication data
-                        authentication_results = authentication_results[0]
+                        if len(authentication_results) > 0:
+                            # [('admin', '21232f297a57a5a743894a0e4a801fc3', 'yes', '15')]
+                            # Is a tuple contained in a list.
+                            # list[0] -> authentication data
+                            authentication_results = authentication_results[0]
 
-                        # Instance is only created once we have results from authentication.
-                        login_data = Login(authentication_results[0], authentication_results[1], authentication_results[2], int(authentication_results[3]))
-                        
-                        if login_data.is_admin == "yes":
-                            admin_menu(login_data.username)
+                            # Instance is only created once we have results from authentication.
+                            login_data = Login(authentication_results[0], authentication_results[1], authentication_results[2], int(authentication_results[3]))
+                            
+                            if login_data.is_admin == "yes":
+                                admin_menu(login_data.username)
 
-                            # Destroy instance.
-                            del login_data
+                                # Destroy instance.
+                                del login_data
+
+                            else:
+                                user_menu(login_data.username, login_data.discount)
+                                del login_data
 
                         else:
-                            user_menu(login_data.username, login_data.discount)
-                            del login_data
+                            print("\n\tEither username or password is wrong.")
+                            short_pause()
 
                     else:
-                        print("\n\tEither username or password is wrong.")
+                        print("\n\tPassword must not be empty.")
                         short_pause()
-
+                        
                 else:
-                    print("\n\tPassword must not be empty.")
+                    print("\n\tOnly accepts alphabets and no spaces for username.")
+                    print("\tCheck your input again.")
                     short_pause()
-                
-            else:
-                print("\n\tOnly accepts alphabets and no spaces for username.")
-                print("\tCheck your input again.")
-                short_pause()
 
         except KeyboardInterrupt:
             print("\n\n\tDetected CTRL+C, terminating program.")
@@ -994,5 +1096,5 @@ food_data = Food(food_dict, food_cart_dict, food_of_the_day_dict, search_hits_di
 food_data.food_dict = spam.load_data_to_nested_dict(spam.load_data_from_file())
 food_data.food_of_the_day_dict = spam.get_todays_menu(food_data.food_dict)
 
-cover()
+#cover()
 login_menu()
