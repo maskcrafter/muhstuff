@@ -989,7 +989,7 @@ def register():
                     pause()
 
         else:
-            print("\n\tUsername regex failed.")
+            print("\n\tPlease check your input for username again.")
             short_pause()
 
 def login_menu():
