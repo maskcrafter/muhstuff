@@ -928,6 +928,10 @@ def create_user(username, password, is_admin, discount):
         finally:
             if sqlite_connection:
                 sqlite_connection.close()
+
+    else:
+        print("\n\tUnable to find DB file.")
+        sys.exit(1)
            
 def register():
     while True:
