@@ -8,6 +8,7 @@ from calendar import day_name
 from datetime import date
 from random import randint
 from hashlib import md5
+from subprocess import Popen
 
 def pause():
     print()
@@ -88,7 +89,7 @@ def list_todays_food_menu():
     clear_screen()
 
     if len(todays_food_dict) > 0:
-        print_header(f"\t{DAY_OF_THE_WEEK}'s Menu")
+        print_header(f"\t{DAY_OF_THE_WEEK}'s Menu.")
         list_food(todays_food_dict)
         
     else:
@@ -202,6 +203,49 @@ def search_food():
             print("\n\tPlease check your input again.")
             short_pause()
 
+def make_payment(amount_to_pay, discount_rate):
+    while True:
+        clear_screen()
+        print_header("\tPayment")
+
+        print(f"\tAmount to pay -> ${amount_to_pay:.2f}")
+
+        instructions = "\n\tOnly digits are accepted."
+        instructions += "\n\tEnter '0' to cancel payment."
+        instructions += "\n\n\tPlease enter amount to pay -> $"
+
+        try:
+            amount_from_customer = float(input(instructions).strip())
+
+            if amount_from_customer == 0:
+                print("\n\tYou have cancelled payment.")
+                short_pause()
+                break
+
+            elif amount_from_customer < amount_to_pay:
+                print("\n\tPlease provide exact amount or more.")
+                short_pause()
+
+            else:
+                customers_change = amount_from_customer - amount_to_pay
+                print(f"\n\tChange -> ${customers_change:.2f}")
+
+                order_number = randint(1, 500)
+                RECEIPT_FILE_PATH = getcwd() + f"\\order-{order_number}.txt"
+
+                # print_receipt(filename, discount_rate, order_number, amount_from_customer, customers_change)
+                print_receipt(RECEIPT_FILE_PATH, discount_rate, order_number, amount_from_customer, customers_change)
+                Popen(["notepad.exe", RECEIPT_FILE_PATH])
+
+                print("\n\tThank you for supporting SPAM!")
+                pause()
+
+                return "payment made"
+
+        except ValueError:
+            print("\n\tOnly digits are accepted.")
+            short_pause()
+
 def list_order(discount_rate):    
     global food_cart_dict
 
@@ -231,6 +275,8 @@ def list_order(discount_rate):
             discounted_price = total_price * (discount_rate / 100.0)
             net_total_price = total_price - discounted_price
 
+            amount_to_pay = net_total_price
+
             footer = f"\tGross Total: {gross_total_price}"
 
             discounted_price = str(f"{discounted_price:.2f}")
@@ -239,61 +285,53 @@ def list_order(discount_rate):
             footer += f"\n\tLess {discount_rate}% Discount: {discounted_price}"
         
             net_total_price = str(f"{net_total_price:.2f}")
-            net_total_price = f"${net_total_price}".rjust(49)
+            net_total_price = f"${net_total_price}".rjust(45)
 
-            footer += f"\n\tNet total: {net_total_price}"
+            print("\t" + "-" * 64)
+            print(footer)
+            print("\t" + "-" * 64)
+            print(f"\tTotal payable: {net_total_price}")
+            print("\t" + "-" * 64)
 
-            print_header(f"{footer}")
-
-            instructions = "\n\tOnly 'q', 's', 'e' are accepted."
-            instructions += "\n\n\tEnter \"q\" to go back to the main menu."
-            instructions += "\n\tEnter \"s\" to print out receipt."
-            instructions += "\n\tEmpty \"e\" to empty cart.\n\n\tOption -> "
+            instructions = "\n\tEnter 'q' to go back to the main menu."
+            instructions += "\n\tEnter 'm' to modify cart."
+            instructions += "\n\tEnter 'p' to make payment."
+            instructions += "\n\tEmpty 'e' to empty cart."
+            instructions += "\n\n\tOption -> "
             
             option = input(instructions).lower().strip()
             
-            regex = r"^\w{1}$"
-            passed_regex = re.match(regex, option)
+            if option == 'q':
+                break
 
-            if passed_regex:
-                if option == 'q':
-                    break
-
-                elif option == 's':
-                    print_receipt(RECEIPT_FILE_PATH, discount_rate)
-                    print("\n\tSave successful.")
-                    pause()
-                    break
-
-                elif option == 'e':
+            elif option == 'p':
+                if make_payment(amount_to_pay, discount_rate) == "payment made":
                     food_cart_dict.clear()
-                    clear_screen()
-                    print("\tEmptied food cart.")
-                    pause()
                     break
 
-                else:
-                    print("\n\tInvalid option.")
-                    short_pause()
+            elif option == 'e':
+                food_cart_dict.clear()
+                clear_screen()
+
+                print("\tEmptied food cart.")
+                pause()
+                break
 
             else:
-                print("\n\tOnly 'q', 's', 'e' are accepted.")
-                short_pause()
+                print("\n\tOnly 'q', 'm', 'p', 'e' are accepted.")
+                short_pause()              
         
         else:
             print("\n\tFood cart is empty.")
             pause() 
             break
 
-def print_receipt(filename, discount_rate):
+def print_receipt(filename, discount_rate, order_number, amount_from_customer, customers_change):
     if len(food_cart_dict) > 0:
         with open(filename, 'w') as f:
-            order_number = randint(1, 500)
 
-            data = "Thank you for ordering from SPAM.\n"
-            data += f"Order number: #{order_number}\n\n"
-            data += "=" * 64
-            data += "\nYour order\n"
+            data = "=" * 64
+            data += f"\nOrder #{order_number}\n"
             data += "=" * 64
 
             total_price = 0
@@ -321,19 +359,18 @@ def print_receipt(filename, discount_rate):
 
             footer += f"\nLess {discount_rate}% Discount: {discounted_price}"
 
-            price_to_be_paid = net_total_price
-
             net_total_price = str(f"{net_total_price:.2f}")
-            net_total_price = f"${net_total_price}".rjust(49)
-
-            footer += f"\nNet total: {net_total_price}"
+            net_total_price = f"${net_total_price}".rjust(45)
 
             data += "\n"
-            data += "=" * 64
+            data += "-" * 64
             data += f"{footer}\n"
-            data += "=" * 64
-            data += "\n\nPlease present this receipt at the counter.\n"
-            data += f"Total amount payable -> ${price_to_be_paid:.2f}"
+            data += "-" * 64
+            data += f"\nTotal payable: {net_total_price}\n"
+            data += "-" * 64
+            data += f"\n\nYou paid -> ${amount_from_customer:.2f}\n"
+            data += f"Your change -> ${customers_change:.2f}\n"
+            data += "\nThank you for supporting SPAM."
 
             f.write(data)
         
@@ -824,8 +861,6 @@ def login_menu():
 try:
     WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     DAY_OF_THE_WEEK = day_name[date.today().weekday()]
-
-    RECEIPT_FILE_PATH = getcwd() + "\\order.txt"
     
     #HOST = "backend01.itflee.com"
     HOST = "127.0.0.1"
