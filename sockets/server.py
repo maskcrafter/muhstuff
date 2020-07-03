@@ -19,13 +19,74 @@ class Login_Server(Server):
         super().__init__(ip_address, port)
         self.db_filename = db_filename
 
+    def create_new_user(self, new_username, new_password, is_admin, discount):
+        db_file_exist = path.exists(self.db_filename)
+
+        if db_file_exist:
+            try:
+                sqlite_connection = sqlite3.connect(self.db_filename)
+                print("[Create new user] Connection to DB successful.")
+
+                query = "INSERT INTO credentials (username, password, is_admin, discount) VALUES "
+                query += f"(\"{new_username}\", \"{new_password}\", \"{is_admin}\", \"{discount}\")"
+
+                cursor = sqlite_connection.cursor()
+                cursor.execute(query)
+
+                sqlite_connection.commit()
+                return "ok"
+
+            except sqlite3.Error:
+                return "not ok"
+
+            finally:
+                # If sql connection exist, close the sql connection.
+                if (sqlite_connection):
+                    sqlite_connection.close()
+                    print("[Create new user] Sqlite connection closed")
+        
+        else:
+            print("Unable to find DB file.")
+            sys.exit(1)
+
+    def check_new_username(self, new_username):
+        db_file_exist = path.exists(self.db_filename)
+
+        if db_file_exist:
+            try:
+                sqlite_connection = sqlite3.connect(self.db_filename)
+                print("[Check Username] Connection to DB successful.")
+
+                cursor = sqlite_connection.cursor()
+
+                query = f"SELECT username FROM credentials WHERE "
+                query += f"username = \"{new_username}\" LIMIT 1"
+
+                cursor.execute(query)
+                result = cursor.fetchall()
+
+                return result
+
+            except sqlite3.Error as error:
+                print(f"Error while connecting to sqlite -> {error}")
+
+            finally:
+                # If sql connection exist, close the sql connection.
+                if (sqlite_connection):
+                    sqlite_connection.close()
+                    print("[Check Username] Sqlite connection closed")
+        
+        else:
+            print("Unable to find DB file.")
+            sys.exit(1)
+
     def authenticate_user(self, username, password):
         db_file_exist = path.exists(self.db_filename)
         
         if db_file_exist:
             try:
                 sqlite_connection = sqlite3.connect(self.db_filename)
-                print("Connection to DB successful.")
+                print("[Authenticate] Connection to DB successful.")
 
                 cursor = sqlite_connection.cursor()
                 
@@ -44,7 +105,7 @@ class Login_Server(Server):
                 # If sql connection exist, close the sql connection.
                 if (sqlite_connection):
                     sqlite_connection.close()
-                    print("Sqlite connection closed")
+                    print("[Authenticate] Sqlite connection closed")
         else:
             print("Unable to find DB file.")
             sys.exit(1)
@@ -90,6 +151,26 @@ class Simple_Food_Server(Login_Server):
 
                     data = eval(connection.recv(2048).decode())
                     self.update_file(self.filename, data)
+
+                elif data_received == 'check_username':
+                    connection.send(b'ok')
+                    
+                    new_username = connection.recv(255).decode()
+                    result = self.check_new_username(new_username)
+
+                    if len(result) > 0:
+                        connection.send(b'new_username_exists')
+
+                    else:
+                        connection.send(b'new_username_ok')
+
+                        username_and_password = eval(connection.recv(255).decode())
+                        new_username = username_and_password[0]
+                        new_password = username_and_password[1]
+
+                        # create_new_user(self, new_username, new_password, is_admin, discount)
+                        account_creation_result = self.create_new_user(new_username, new_password, "no", "5")
+                        connection.send(account_creation_result.encode())
                 
                 elif data_received == 'login':
                     connection.send(b'ok')
@@ -148,6 +229,7 @@ class Simple_Food_Server(Login_Server):
                 print(f"[{connection_made_time}] Received connection from -> IP: {client_addr} PORT: {client_port}")
 
                 return_code = self.handler(connection)
+
                 if return_code == 'shutdown':
                     break
 

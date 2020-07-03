@@ -873,6 +873,109 @@ def admin_menu(username):
             print(f"\n\tOnly accepts digits.")
             short_pause()
 
+def register():
+    while True:
+        clear_screen()
+        print_header("\tRegister.")
+
+        instructions = "\tFor username, only alphabets are accepted."
+        instructions += "\n\tAdditionally, you can't use 'register' as a new username."
+        instructions += "\n\n\tFor passwords:"
+        instructions += "\n\tAt least 1 uppercase, 1 lowercase, 1 number and 1 special character."
+        instructions += "\n\tLeading and Trailing whitespaces for passwords will be removed."
+
+        print(instructions)
+
+        new_username = input("\n\tEnter new username -> ").lower().strip()
+        regex = r"^[A-Za-z]*$"
+        passed_regex = re.match(regex, new_username)
+
+        if passed_regex and new_username != '' and new_username != 'register':
+            client_socket = connect_to_server()
+            client_socket.connect((HOST, PORT))
+
+            client_socket.send(b'check_username')
+            server_reply = client_socket.recv(255).decode()
+
+            if server_reply == "ok":
+                client_socket.send(new_username.encode())    
+                check_new_username_results = client_socket.recv(255).decode()
+
+                if check_new_username_results == "new_username_ok":
+                    new_password = input("\tEnter new password -> ").strip()
+
+                    lower_regex = re.compile(r'[a-z]+')
+                    upper_regex = re.compile(r'[A-Z]+')
+                    digit_regex = re.compile(r'[0-9]+')
+                    special_char_regex = re.compile(r'\W+')
+
+                    error = ''
+
+                    if len(new_password) < 8:
+                        error += "\n\tPassword must contain at least 8 characters."
+
+                    if lower_regex.findall(new_password) == []:
+                        error += "\n\tPassword must contain at least one lowercase character."
+
+                    if upper_regex.findall(new_password) == []:
+                        error += "\n\tPassword must contain at least one uppercase character." 
+
+                    if digit_regex.findall(new_password) == []:
+                        error += "\n\tPassword must contain at least one digit."
+
+                    if special_char_regex.findall(new_password) == []:
+                        error += "\n\tPassword must contain at least one special character."
+
+                    if error == '':
+                        hashed_password = md5(new_password.encode()).hexdigest()
+                        username_and_password = str([new_username, hashed_password]).encode()
+
+                        client_socket.send(username_and_password)
+                        account_creation_result = client_socket.recv(255).decode()
+                        client_socket.close()
+                    
+                        if account_creation_result == "ok":
+                            print("\n\tAccount created!")
+                            print("\tPlease login with your new username.")
+                            pause()
+                            break
+
+                        elif account_creation_result == "not ok":
+                            print("\n\tAccount creation failed!")
+                            print("\tWe will need the developer to take a look at it.")
+                            pause()
+
+                        else:
+                            print("\n\tReceived unknown response for 'Create New User")
+                            sys.exit(1)
+
+                    else:
+                        print(error)
+                        client_socket.close()
+                        pause()
+
+                elif check_new_username_results == "new_username_exists":
+                    print("\n\tDuplicate username found.")
+                    print("\tPlease choose a unique name.")
+
+                    client_socket.close()
+                    short_pause()
+
+                else:
+                    print("\n\tReceived unknown response for 'Check if duplicate exists'.")
+                    print("\tExiting program.")
+                    sys.exit(1)
+
+            else:
+                print("\n\tReceived response other than 'ok' for Register.")
+                print("\tExiting program.")
+                sys.exit(1)
+
+        else:
+            print("\n\tOnly accepts alphabets and no spaces for username.")
+            print("\tCheck your input again.")
+            short_pause()
+
 def login_menu():
     while True:
         clear_screen()
@@ -880,62 +983,72 @@ def login_menu():
 
         instructions = "\tFor username, only alphabets are accepted."
         instructions += "\n\tAbove rule does not apply for password.\n"
+        instructions += "\n\tEnter 'register' to register a new user.\n"
         
         print(instructions)
 
         try:
             username = input("\tUsername -> ").lower().strip()
 
-            regex = r"^[A-Za-z]*$"
-            passed_regex = re.match(regex, username)
-
-            # Passed regex, username not empty.
-            if passed_regex and username != "":
-                password = input("\tPassword -> ")
-
-                if password != "":
-                    hashed_password = md5(password.encode()).hexdigest()
-
-                    client_socket = connect_to_server()
-                    client_socket.connect((HOST, PORT))
-
-                    client_socket.send(b'login')
-                    server_reply = client_socket.recv(255).decode()
-
-                    if server_reply == "ok":
-                        username_and_password = str([username, hashed_password]).encode()
-                        client_socket.send(username_and_password)
-
-                        # authentication_data = str([login, username, is_admin, discount_rate]).encode()
-                        authentication_data = eval(client_socket.recv(255).decode())
-                        client_socket.close()
-
-                        login_ok = authentication_data[0]
-                        username = authentication_data[1]
-                        is_admin = authentication_data[2]
-                        discount_rate = authentication_data[3]
-
-                        if login_ok:
-                            print("\n\tLogging you in.")
-                            short_pause()
-                            
-                            if is_admin == "yes":
-                                admin_menu(username)
-                            else:
-                                user_menu(username, discount_rate)
-
-                        else:
-                            print("\n\tEither your username or password is wrong.")
-                            short_pause()
-                    
-                else:
-                    print("\n\tPassword must be not empty.")
-                    short_pause()
+            if username == "register":
+                register()
 
             else:
-                print("\n\tOnly accepts alphabets and no spaces for username.")
-                print("\tCheck your input again.")
-                short_pause()
+                regex = r"^[A-Za-z]*$"
+                passed_regex = re.match(regex, username)
+
+                # Passed regex, username not empty.
+                if passed_regex and username != "":
+                    password = input("\tPassword -> ")
+
+                    if password != "":
+                        hashed_password = md5(password.encode()).hexdigest()
+
+                        client_socket = connect_to_server()
+                        client_socket.connect((HOST, PORT))
+
+                        client_socket.send(b'login')
+                        server_reply = client_socket.recv(255).decode()
+
+                        if server_reply == "ok":
+                            username_and_password = str([username, hashed_password]).encode()
+                            client_socket.send(username_and_password)
+
+                            # authentication_data = str([login, username, is_admin, discount_rate]).encode()
+                            authentication_data = eval(client_socket.recv(255).decode())
+                            client_socket.close()
+
+                            login_ok = authentication_data[0]
+                            username = authentication_data[1]
+                            is_admin = authentication_data[2]
+                            discount_rate = authentication_data[3]
+
+                            if login_ok:
+                                print("\n\tLogging you in.")
+                                short_pause()
+                                
+                                if is_admin == "yes":
+                                    admin_menu(username)
+                                else:
+                                    user_menu(username, discount_rate)
+
+                            else:
+                                print("\n\tEither your username or password is wrong.")
+                                short_pause()
+
+                        else:
+                            print("\n\tReceived response other than 'ok' for Login.")
+                            print("\tExiting program.")
+                            sys.exit(1)
+                        
+                    else:
+                        print("\n\tPassword must be not empty.")
+                        short_pause()
+
+                else:
+                    print("\n\tOnly accepts alphabets and no spaces for username.")
+                    print("\tCheck your input again.")
+                    short_pause()
 
         except KeyboardInterrupt:
             print("\n\n\tInterrupted by \"CTRL + C\"")
