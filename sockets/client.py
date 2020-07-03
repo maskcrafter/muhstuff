@@ -106,7 +106,7 @@ def order_food(local_food_dict):
         list_food(local_food_dict)
 
         try:
-            instructions = "\n\tEnter \"0\" to exit."
+            instructions = "\n\tEnter '0' to exit."
             instructions += "\n\tOnly digits are accepted."
             instructions += "\n\n\tOption -> "
 
@@ -130,16 +130,11 @@ def order_food(local_food_dict):
                 print_header(f"\t{ordered_food_name}'s page.")
 
                 instructions = "\tOnly digits are accepted."
-                instructions += "\n\tMin digits - 1, Max digits - 2."
+                instructions += "\n\tQuantity must not be greater than 20."
                 instructions += "\n\n\tQuantity -> "
                 
-                order_quantity = input(instructions).strip()
-
-                # https://stackoverflow.com/questions/4824942/regex-to-match-digits-of-specific-length
-                regex = r"^\d{1,2}$"
-
-                if re.match(regex, order_quantity):
-                    order_quantity = int(order_quantity)
+                try:
+                    order_quantity = int(input(instructions).strip())
 
                     if order_quantity == 0:
                         print(f"\n\tYou have cancelled ordering {ordered_food_name}.")
@@ -148,6 +143,11 @@ def order_food(local_food_dict):
                     
                     elif order_quantity < 0:
                         print("\n\tNegative values are not accepted.")
+                        short_pause()
+
+                    elif order_quantity > 20:
+                        print("\n\tExcessive quantities are not accepted.")
+                        short_pause()
                     
                     else:
                         price_and_quantity_list = [ordered_food_price, order_quantity]
@@ -157,9 +157,8 @@ def order_food(local_food_dict):
                         pause()
                         break
                 
-                else:
-                    print("\n\tQuantity must be in digits.")
-                    print("\tAdditionally check min|max digits.")
+                except ValueError:
+                    print(f"\n\tOnly accepts digits.")
                     short_pause()
 
         except ValueError:
@@ -172,7 +171,7 @@ def search_food():
         print_header(f"\tFood-Search Menu")
 
         instructions = "\tOnly alphabets and spaces are accepted."
-        instructions += "\n\tEnter \"exit\" to go back to the previous menu."
+        instructions += "\n\tEnter 'exit' to go back to the previous menu."
         instructions += "\n\n\tSearch -> "
         
         food_to_search = input(instructions).lower().strip()
@@ -246,6 +245,92 @@ def make_payment(amount_to_pay, discount_rate):
             print("\n\tOnly digits are accepted.")
             short_pause()
 
+def modify_quantity(chosen_food):
+    clear_screen()
+    print_header(f"\t{chosen_food}.")
+
+    price_and_quantity_list = food_cart_dict.get(chosen_food)
+    old_quantity = price_and_quantity_list[1]
+
+    print(f"\tOld quantity -> {old_quantity}")
+
+    instructions = "\n\tOnly digits are accepted."
+    instructions += "\n\tQuantity must not be greater than 20."
+    instructions += "\n\n\tQuantity -> "
+
+    try:
+        new_quantity = int(input(instructions).strip())
+
+        if new_quantity == 0:
+            food_cart_dict.pop(chosen_food)
+
+            print(f"\n\tYou removed {chosen_food} from the cart.")
+            pause()
+
+        elif new_quantity < 0:
+            print("\n\tNegative values are not accepted.")
+            short_pause()
+
+        elif new_quantity > 20:
+            print("\n\tExcessive quantities are not accepted.")
+            short_pause()
+
+        else:
+            price_and_quantity_list[1] = new_quantity
+            food_cart_dict[chosen_food] = price_and_quantity_list
+
+            print(f"\n\tUpdated {chosen_food} to X {new_quantity}.")
+            pause()
+
+    except ValueError:
+        print(f"\n\tOnly digits are accepted.")
+        short_pause()
+
+def modify_cart():
+    while True:
+        upper_bound = len(food_cart_dict)
+
+        if upper_bound > 0:
+            clear_screen()
+            print_header("\tModify Cart.")
+
+            for count, food_name in enumerate(food_cart_dict, 1):
+                price_and_quantity_list = food_cart_dict.get(food_name)
+
+                food_quantity = price_and_quantity_list[1]
+                food_name_and_quantity = f"{food_name} X {food_quantity}"
+
+                print(f"\t{count}. {food_name_and_quantity.ljust(50)}")
+
+            instructions = "\n\tEnter '0' to exit."
+            instructions += "\n\tOnly digits are accepted."
+            instructions += "\n\n\tOption -> "
+
+            try:
+                option = int(input(instructions).strip())
+
+                if option == 0:
+                    break
+
+                elif option < 1 or option > upper_bound:
+                    print(f"\n\tFood chosen must be between 1 to {upper_bound}.")
+                    short_pause()
+                
+                else:
+                    for count, food_name in enumerate(food_cart_dict, 1):
+                        if option == count:
+                            chosen_food = food_name
+                            break
+
+                    modify_quantity(chosen_food)
+
+            except ValueError:
+                print("\n\tOnly digits are accepted.")
+                short_pause()
+            
+        else:
+            return "empty cart"
+
 def list_order(discount_rate):    
     global food_cart_dict
 
@@ -304,6 +389,10 @@ def list_order(discount_rate):
             if option == 'q':
                 break
 
+            elif option == 'm':
+                if modify_cart() == "empty cart":
+                    break
+
             elif option == 'p':
                 if make_payment(amount_to_pay, discount_rate) == "payment made":
                     food_cart_dict.clear()
@@ -322,7 +411,7 @@ def list_order(discount_rate):
                 short_pause()              
         
         else:
-            print("\n\tFood cart is empty.")
+            print("\tFood cart is empty.")
             pause() 
             break
 
@@ -389,7 +478,7 @@ def user_menu(username, discount_rate):
         print("\t3. Display cart.")
         
         instructions = "\n\tOnly digits are accepted."
-        instructions += "\n\tEnter \"0\" to exit."
+        instructions += "\n\tEnter '0' to exit."
         instructions += "\n\n\tChoice -> "
 
         try:
@@ -447,7 +536,7 @@ def add_food(selected_day):
         list_food(selected_day_food_dict)
 
         instructions = "\n\tOnly accepts alphabets and spaces."
-        instructions += "\n\tEnter \"exit\" to exit."
+        instructions += "\n\tEnter 'exit' to exit."
         instructions += "\n\n\tEnter new food name -> "
 
         new_food_name = input(instructions).strip()
@@ -603,7 +692,7 @@ def edit_food_name_or_food_price_or_delete_food(selected_day, selected_day_food_
 
         try:
             instructions = "\n\tOnly digits are accepted."
-            instructions += "\n\tEnter \"0\" to exit."
+            instructions += "\n\tEnter '0' to exit."
             instructions += "\n\n\tSelect Food -> "
             
             option = int(input(instructions).strip())
@@ -645,7 +734,7 @@ def choose_food(selected_day_food_dict, selected_day):
         list_food(selected_day_food_dict)
         
         instructions = "\n\tOnly digits are accepted."
-        instructions += "\n\tEnter \"0\" to exit."
+        instructions += "\n\tEnter '0' to exit."
         instructions += "\n\n\tSelect Food -> "
 
         try:
@@ -677,14 +766,14 @@ def choose_food(selected_day_food_dict, selected_day):
 def add_delete_edit_menu(selected_day, selected_day_food_dict):
     while True:
         clear_screen()
-        print_header("\tAdd, Delete, Edit food.")
+        print_header(f"\t{selected_day}.")
 
         print("\t1. Add Food.")
         print("\t2. Delete/Edit Food.")
 
         try:
             instructions = "\n\tOnly accepts digits."
-            instructions += "\n\tEnter \"0\" to exit."
+            instructions += "\n\tEnter '0' to exit."
             instructions += "\n\n\tOption -> "
             
             option = int(input(instructions).strip())
@@ -722,7 +811,7 @@ def edit_food():
         
         try:
             instructions = "\n\tOnly digits are accepted."
-            instructions += "\n\tEnter \"0\" to exit."
+            instructions += "\n\tEnter '0' to exit."
             instructions += "\n\n\tSelect Day -> "
 
             option = int(input(instructions).strip())
@@ -754,7 +843,7 @@ def admin_menu(username):
         print("\t1. Edit food name|price.")
         print("\t2. Shutdown server.")
 
-        instructions = "\n\tEnter \"0\" to exit."
+        instructions = "\n\tEnter '0' to exit."
         instructions += "\n\tOnly accepts digits."
         instructions += "\n\n\tOption -> "
 
@@ -862,7 +951,6 @@ try:
     WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     DAY_OF_THE_WEEK = day_name[date.today().weekday()]
     
-    #HOST = "backend01.itflee.com"
     HOST = "127.0.0.1"
     PORT = 4444
 

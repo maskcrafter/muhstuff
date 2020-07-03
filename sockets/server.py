@@ -4,6 +4,7 @@ import sys
 
 from os import system, getcwd, path
 from time import sleep
+from datetime import datetime
 
 class Server:
     def __init__(self, ip_address, port):
@@ -143,7 +144,8 @@ class Simple_Food_Server(Login_Server):
                 connection, address = server_socket.accept()
                 client_addr, client_port = address
 
-                print(f"Received connection from -> IP: {client_addr} PORT: {client_port}")
+                connection_made_time = datetime.now().strftime("%H:%M:%S")            
+                print(f"[{connection_made_time}] Received connection from -> IP: {client_addr} PORT: {client_port}")
 
                 return_code = self.handler(connection)
                 if return_code == 'shutdown':
