@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+
 {% block title %} Food cart {% endblock %}
 
-{% block content %}
-    <p><b>Order</b>: #<u>{{ order_number }}</u></p><hr>
+{% block head %}
+    <meta http-equiv = "X-UA-Compatible" content = "IE=edge" />
+    <script type = "text/javascript" src = "{{ url_for('static', filename = 'cart.js') }}"></script>
+{% endblock %}
 
-    <p>Please remember to print or save this page via the save button.</p>
+{% block content %}
+    <p><b>Order</b>: #<i>{{ order_number }}</i></p><hr>
 
     <table border = "1px solid black" width = '600px' style = "text-align : center">
         <tr>
@@ -47,12 +51,41 @@
             <td><p><i>Net Price</i></p></td>
             <td>${{ "%.2f" | format(net_price) }}</td>
         </tr>
+
+        <tr>
+            <td colspan = "3">
+                <script src = "https://www.paypal.com/sdk/js?client-id=ASIOysVBjMbPK7lZktaSyADHqRgAEvjkJaQXVDkue7z1m4O73Dky06kJm-tchJl6KLpOLGmppYBu0B6J&currency=SGD"></script>
+
+                <div id="paypal-button-container"></div>
+            
+                <script>
+                    paypal.Buttons({
+                        
+                        createOrder: function(data, actions) {    
+                            return actions.order.create({
+                                purchase_units: [{ amount: { value: "{{ net_price }}" } }]
+                            });
+                        },
+                        
+                        onApprove: function(data, actions) {
+                            return actions.order.capture().then(function(details) {
+                                var order_number = "{{ order_number }}";
+                                var payment_status = details.status;
+                                var payer_name =  details.payer.name.given_name; 
+                                var payer_email = details.payer.email_address;
+
+                                message = "Transaction Completed!\n";
+                                message += "Redirecting you to receipt page.";
+                                alert(message);
+                               
+                                // function post(path, params, method = 'post')
+                                post("/order/save", {order_number: order_number, payment_status: payment_status, payer_name: payer_name, payer_email: payer_email});
+                            });
+                        }
+            
+                    }).render('#paypal-button-container');
+                </script>
+            </td>
+        </tr>
     </table>
-    <br><hr>
-
-    <p>Thank you for ordering from SPAM.<br>Please pay a total of $<u>{{ "%.2f" | format(net_price) }}</u></p>
-
-    <form action = "/order/save" method = "POST">
-        <input type = 'submit' name = "{{ order_number }}" value = "Save Order #{{ order_number }}">
-    </form>
 {% endblock %}

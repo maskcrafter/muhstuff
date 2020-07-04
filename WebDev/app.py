@@ -14,6 +14,7 @@ CURRENT_DAY = day_name[date.today().weekday()]
 
 path_to_data = getcwd() + "\\food.txt"
 path_to_db = getcwd() + "\\creds.db"
+path_to_download_folder = getcwd() + "\\download\\" 
 
 food_dict = dict()
 food_cart_dict = dict()
@@ -262,10 +263,8 @@ def download_file():
             for filename in post_parameters:
                 file_to_be_downloaded = filename 
 
-            path_to_download_folder = getcwd() + "\\download\\" 
-            
             return send_from_directory(path_to_download_folder, file_to_be_downloaded, as_attachment = True)
-        
+     
         else:
             files_in_directory = listdir(getcwd() + "\\download")
             number_of_files = len(files_in_directory)
@@ -348,11 +347,12 @@ def save_order():
         if request.method == 'POST':
             post_parameters = request.form
 
-            # Only interested in order number.
-            for order in post_parameters:
-                order_number = order
+            order_number = post_parameters.get('order_number')
+            payment_status = post_parameters.get('payment_status')
+            payer_name = post_parameters.get('payer_name')
+            payer_email = post_parameters.get('payer_email')
 
-            print_receipt(order_number)
+            print_receipt(order_number, payment_status, payer_name, payer_email)
 
             return render_template('order_saved.html', order_number = order_number)
         
@@ -405,15 +405,17 @@ def update_file(filename, food_dict):
 
         f.write(data.strip())
 
-def print_receipt(order_number):
+def print_receipt(order_number, payment_status, payer_name, payer_email):
     if len(food_cart_dict) > 0:
         path_to_receipt = getcwd() + f"\\download\\{order_number}.txt"
 
+        data = f"Payment Status : {payment_status}\n"
+        data += f"Payer Name : {payer_name}\n"
+        data += f"Payer Email : {payer_email}\n\n"
+
         with open(path_to_receipt, 'w') as f:
-            data = "Thank you for ordering from SPAM.\n"
-            data += f"Order number: #{order_number}\n\n"
             data += "=" * 64
-            data += "\nYour order\n"
+            data += f"\nOrder : #{order_number}\n"
             data += "=" * 64
 
             for count, food_name in enumerate(food_cart_dict, 1):
@@ -437,16 +439,15 @@ def print_receipt(order_number):
             net_price = total_quantity_and_price_list[4]
             net_price = f"${net_price:.2f}".rjust(50)
 
-            price_to_pay = total_quantity_and_price_list[4]
+            #price_to_pay = total_quantity_and_price_list[4]
 
             data += "\n"
             data += "=" * 64
             data += f"\nGross Price {gross_price}"
-            data += f"\nDiscount {int(discount_rate)}% {discount_price}"
+            data += f"\nDiscount {int(discount_rate)}% {discount_price}\n"
+            data += "=" * 64
             data += f"\nNet Price {net_price}\n"
             data += "=" * 64
-            data += "\n\nPlease present this receipt at the counter.\n"
-            data += f"Total amount payable -> ${price_to_pay:.2f}"
 
             f.write(data)    
 

@@ -3,21 +3,27 @@
 {% block title %} Download folder {% endblock %}
 
 {% block content %}
-    <p><u>Directory Listing</u></p>
+    {% if files_in_directory | length %}
+        <h3>Directory Listing</h3>
 
-    <form action = '/download' method = "POST">
-        <table border = "1px solid black" width = '350px' style = "text-align : center">
+        <form action = '/download' method = "POST">
+            <table border = "1px solid black" width = '350px' style = "text-align : center">
 
-            {% for file in files_in_directory %}
-                <tr>
-                    <td><p>{{ file }}</p></td>
-                    <td><input type = 'submit' name = "{{ file }}" value = "Download"><br></td>
-                </tr>
-            {% endfor %}
+                {% for file in files_in_directory %}
+                    <tr>
+                        <td><p>{{ file }}</p></td>
+                        <td><input type = 'submit' name = "{{ file }}" value = "Download"><br></td>
+                    </tr>
+                {% endfor %}
 
-        </table>
-    </form>
+            </table>
+        </form>
+        
+        <p>{{ number_of_files }} File(s) Found.</p>
 
-    <p><b>{{ number_of_files }}</b> file(s) Found.</p>
+    {% else %}
+        <h3>No files found!</h3>
+    {% endif %}
+
     <p><a href = '/user'>Back to Main Menu</p>
 {% endblock %}
